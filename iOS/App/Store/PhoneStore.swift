@@ -33,6 +33,10 @@ final class PhoneStore {
     var photosAccess = PHPhotoLibrary.authorizationStatus(for: .readWrite)
     var contactsAccess = CNContactStore.authorizationStatus(for: .contacts)
     var hasFolder = FolderAccess.hasFolder
+    /// What Neuralyzer suggests deleting, largest first.
+    var recommended: [Recommendation] = []
+    private var photoIndex: [String: PhotoInfo] = [:]
+    private var fileIndex: [String: FileInfo] = [:]
 
     private let photos = PhotoScanner()
 
@@ -80,10 +84,12 @@ final class PhoneStore {
         let canPhotos = photosAccess == .authorized || photosAccess == .limited
         let canContacts = contactsAccess == .authorized || contactsAccess == .limited
         Task {
-            let found = await Task.detached(priority: .userInitiated) { () -> [PhoneCategory: CategoryContent] in
+            let (found, allPhotos) = await Task.detached(priority: .userInitiated) { () -> ([PhoneCategory: CategoryContent], [PhotoInfo]) in
                 var out: [PhoneCategory: CategoryContent] = [:]
+                var allPhotos: [PhotoInfo] = []
                 if canPhotos {
                     let all = scanner.scan { p in Task { @MainActor in self.progress = p * 0.6 } }
+                    allPhotos = all
                     let exact = exactDuplicateGroups(all, confirm: { a, b in (scanner.distance(a, b) ?? 1) < 0.05 })
                     let inExact = Set(exact.flatMap { [$0.keep.id] + $0.others.map(\.id) })
                     let near = nearDuplicateGroups(all, excluding: inExact, distance: scanner.distance, threshold: 0.35,
@@ -101,9 +107,14 @@ final class PhoneStore {
                 if canContacts {
                     out[.contacts] = CategoryContent(contactGroups: contactGroups(ContactScanner().scan()))
                 }
-                return out
+                return (out, allPhotos)
             }.value
             results = found
+            photoIndex = Dictionary(allPhotos.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+            let files = found.values.flatMap { $0.files + $0.fileGroups.flatMap { [$0.keep] + $0.others } }
+            fileIndex = Dictionary(files.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+            recommended = recommendations(photos: allPhotos, photoGroups: found[.duplicates]?.photoGroups ?? [],
+                                          fileGroups: found[.icloudDuplicates]?.fileGroups ?? [], now: Date())
             selection = Self.preselection(found)
             progress = 1
             scanning = false
@@ -131,6 +142,36 @@ final class PhoneStore {
     func deletePhotos(in category: PhoneCategory) async -> Bool {
         guard let content = results[category] else { return false }
         let items = (content.photos + content.photoGroups.flatMap(\.others)).filter { selection.contains($0.id) }
+        return await deletePhotoItems(items)
+    }
+
+    /// Every recommended item that is still checked.
+    var selectedRecommended: [String] {
+        recommended.flatMap(\.ids).filter { selection.contains($0) }
+    }
+
+    var selectedRecommendedBytes: Int64 {
+        selectedRecommended.reduce(0) { $0 + (photoIndex[$1].map(estimatedBytes) ?? fileIndex[$1]?.bytes ?? 0) }
+    }
+
+    func selectAllRecommended() {
+        selection.formUnion(recommended.flatMap(\.ids))
+    }
+
+    /// Deletes the checked recommended photos in one Photos confirmation, then trashes the checked files.
+    func deleteRecommended() async {
+        let ids = selectedRecommended
+        let photos = ids.compactMap { photoIndex[$0] }
+        if !photos.isEmpty { _ = await deletePhotoItems(photos) }
+        let files = ids.compactMap { fileIndex[$0] }
+        if !files.isEmpty {
+            let removed = await Task.detached { Self.trash(files) }.value
+            freedThisSession += files.filter { removed.contains($0.id) }.reduce(0) { $0 + $1.bytes }
+            removeEverywhere(removed)
+        }
+    }
+
+    private func deletePhotoItems(_ items: [PhotoInfo]) async -> Bool {
         guard !items.isEmpty else { return false }
         let ids = items.map(\.id)
         do {
@@ -234,6 +275,12 @@ final class PhoneStore {
 
     private func removeEverywhere(_ ids: Set<String>) {
         guard !ids.isEmpty else { return }
+        recommended = recommended.compactMap { r in
+            let left = r.ids.filter { !ids.contains($0) }
+            guard !left.isEmpty else { return nil }
+            let bytes = left.reduce(Int64(0)) { $0 + (photoIndex[$1].map(estimatedBytes) ?? fileIndex[$1]?.bytes ?? 0) }
+            return Recommendation(reason: r.reason, ids: left, bytes: bytes)
+        }
         for (category, var content) in results {
             content.photos.removeAll { ids.contains($0.id) }
             let dropped = content.photoGroups.filter { ids.contains($0.keep.id) }.flatMap(\.others).map(\.id)

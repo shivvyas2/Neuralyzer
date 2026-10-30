@@ -14,6 +14,9 @@ struct HomeView: View {
                         ProgressView(value: store.progress).tint(Theme.ink)
                     }
                     accessNotice
+                    if !store.scanning && !store.recommended.isEmpty {
+                        RecommendedCard()
+                    }
                     LazyVGrid(columns: columns, spacing: 14) {
                         ForEach(store.categories, id: \.self) { category in
                             NavigationLink(value: category) { CategoryCard(category: category) }
@@ -27,6 +30,7 @@ struct HomeView: View {
                 .padding(20)
             }
             .navigationDestination(for: PhoneCategory.self) { CategoryDetailView(category: $0) }
+            .navigationDestination(for: Route.self) { _ in RecommendedView() }
             .toolbar(.hidden, for: .navigationBar)
         }
         .onAppear { if store.results.isEmpty && !store.scanning { store.scan() } }
