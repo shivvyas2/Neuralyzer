@@ -1,0 +1,41 @@
+name: Neuralyzer
+options:
+  bundleIdPrefix: com.shivvyas
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+packages:
+  NeuralyzerKit:
+    path: NeuralyzerKit
+targets:
+  Neuralyzer:
+    type: application
+    platform: macOS
+    sources: [App]
+    dependencies:
+      - package: NeuralyzerKit
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Neuralyzer
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.utilities
+        LSMinimumSystemVersion: "15.0"
+        NSHumanReadableCopyright: Copyright 2026 Shiv Vyas
+    entitlements:
+      path: App/Neuralyzer.entitlements
+      properties: {}
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shivvyas.neuralyzer
+        PRODUCT_NAME: Neuralyzer
+        MARKETING_VERSION: 1.0.0
+        CURRENT_PROJECT_VERSION: 1
+        DEVELOPMENT_TEAM: Z42YU5W6WY
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_HARDENED_RUNTIME: YES
+        ENABLE_APP_SANDBOX: NO
+        SWIFT_VERSION: "6.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        COMBINE_HIDPI_IMAGES: YES

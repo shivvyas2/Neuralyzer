@@ -28,7 +28,7 @@ public enum CategoryID: String, CaseIterable, Sendable, Hashable {
         case .projectBuilds: "folder.badge.gearshape"
         case .vms: "server.rack"
         case .appCaches: "square.stack.3d.up"
-        case .junk: "doc.badge.ellipsis"
+        case .junk: "xmark.bin"
         case .trash: "trash"
         case .largeFiles: "externaldrive"
         case .oldFiles: "clock.arrow.circlepath"
