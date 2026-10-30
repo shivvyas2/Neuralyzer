@@ -24,7 +24,7 @@ public enum CategoryID: String, CaseIterable, Sendable, Hashable {
         switch self {
         case .xcode: "hammer"
         case .simulators: "iphone"
-        case .claudeCode: "sparkle"
+        case .claudeCode: "terminal"
         case .packageCaches: "shippingbox"
         case .projectBuilds: "folder.badge.gearshape"
         case .vms: "server.rack"
