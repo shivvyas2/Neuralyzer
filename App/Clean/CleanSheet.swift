@@ -39,6 +39,9 @@ struct CleanSheet: View {
             if items.contains(where: { $0.action == .trash }) {
                 Text("Some items go to the Trash.").font(.system(size: 14)).foregroundStyle(.secondary)
             }
+            if items.contains(where: \.needsAdmin) {
+                Text("Needs your password.").font(.system(size: 14)).foregroundStyle(.secondary)
+            }
             if !blockers.isEmpty {
                 Text("Quit \(blockers.joined(separator: " and ")) first.").font(.system(size: 14)).foregroundStyle(.orange)
             }

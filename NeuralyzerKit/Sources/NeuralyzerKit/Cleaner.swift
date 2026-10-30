@@ -35,10 +35,51 @@ public actor Cleaner {
 
     public func clean(_ items: [Item]) async -> CleanReport {
         var report = CleanReport()
-        for item in items {
+        let admin = items.filter(\.needsAdmin)
+        for item in items where !item.needsAdmin {
             await clean(item, into: &report)
         }
+        if !admin.isEmpty { await cleanAsAdmin(admin, into: &report) }
         return report
+    }
+
+    /// System items go in one script so the password is asked for once.
+    private func cleanAsAdmin(_ items: [Item], into report: inout CleanReport) async {
+        var commands: [String] = []
+        var included: [Item] = []
+        for item in items {
+            switch item.action {
+            case .adminDelete:
+                guard FileManager.default.fileExists(atPath: item.url.path) else {
+                    write("skipped", 0, item.url.path)
+                    continue
+                }
+                guard let root = item.root, guardian.allows(item.url, root: root) else {
+                    write("refused", 0, item.url.path)
+                    report.failures.append(item.name)
+                    continue
+                }
+                commands.append("/bin/rm -rf -- \(shellQuote(item.url.resolvingSymlinksInPath().path))")
+            case .tmutilDeleteSnapshot(let date):
+                commands.append("/usr/bin/tmutil deletelocalsnapshots \(shellQuote(date))")
+            default:
+                continue
+            }
+            included.append(item)
+        }
+        guard !commands.isEmpty else { return }
+        do {
+            try await env.admin.run(shell: commands.joined(separator: "; "))
+            for item in included {
+                report.freed += item.bytes
+                write("admin delete", item.bytes, item.id)
+            }
+        } catch {
+            for item in included {
+                write("failed", 0, item.id)
+                report.failures.append(item.name)
+            }
+        }
     }
 
     private func clean(_ item: Item, into report: inout CleanReport) async {
@@ -89,7 +130,7 @@ public actor Cleaner {
                         write(Self.isMissing(error) ? "skipped" : "failed", 0, entry.path)
                     }
                 }
-            case .simctlDeleteDevice, .simctlDeleteRuntime:
+            case .simctlDeleteDevice, .simctlDeleteRuntime, .adminDelete, .tmutilDeleteSnapshot:
                 break
             }
         } catch where Self.isMissing(error) {

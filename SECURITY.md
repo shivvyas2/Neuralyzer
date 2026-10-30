@@ -11,6 +11,7 @@ Include what you found and how to reproduce it. You will get an acknowledgement 
 ## What counts
 
 - Any way to make the app delete or trash a path outside its category roots, including through symlinks.
+- Any way to make the administrator script run something other than removing the listed system items, including through a crafted file name.
 - Any way for it to touch Claude Code memory, settings, skills, agents, commands, or credentials.
 - Anything that sends data off the machine. The app makes no network calls.
 

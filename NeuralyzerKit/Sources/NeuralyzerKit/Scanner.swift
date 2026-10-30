@@ -6,7 +6,7 @@ public struct DiskScanner: Sendable {
 
     public static func all() -> [any CategoryRule] {
         [XcodeRule(), SimulatorRule(), ClaudeRule(), PackageCacheRule(), ProjectBuildRule(), VMRule(),
-         AppCacheRule(), JunkRule(), TrashRule(), LargeFileRule(), OldFileRule()]
+         AppCacheRule(), JunkRule(), TrashRule(), LargeFileRule(), OldFileRule(), SystemRule()]
     }
 
     public func scan(_ env: ScanEnvironment, rules: [any CategoryRule] = DiskScanner.all()) -> AsyncStream<CategoryResult> {

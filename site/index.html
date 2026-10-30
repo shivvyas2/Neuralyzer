@@ -252,7 +252,7 @@
     <div class="wrap">
       <p>Knows where these keep their clutter</p>
       <div class="chips">
-        <span class="chip">Xcode</span><span class="chip">Simulator</span><span class="chip">Claude Code</span><span class="chip">npm</span><span class="chip">pnpm</span><span class="chip">Yarn</span><span class="chip">Bun</span><span class="chip">Homebrew</span><span class="chip">CocoaPods</span><span class="chip">Gradle</span><span class="chip">Cargo</span><span class="chip">Docker</span><span class="chip">UTM</span><span class="chip">Ollama</span>
+        <span class="chip">Xcode</span><span class="chip">Simulator</span><span class="chip">Claude Code</span><span class="chip">npm</span><span class="chip">pnpm</span><span class="chip">Yarn</span><span class="chip">Bun</span><span class="chip">Homebrew</span><span class="chip">CocoaPods</span><span class="chip">Gradle</span><span class="chip">Cargo</span><span class="chip">Docker</span><span class="chip">UTM</span><span class="chip">Ollama</span><span class="chip">Time Machine</span><span class="chip">macOS</span>
       </div>
     </div>
   </section>
@@ -264,7 +264,7 @@
       <div class="grid4">
         <div class="stat box"><div class="dot" style="--c: var(--lavender)"></div><div class="big">34.6 GB</div><p>Simulator devices and runtimes</p></div>
         <div class="stat box"><div class="dot" style="--c: var(--yellow)"></div><div class="big">21.1 GB</div><p>Xcode DerivedData, DeviceSupport, and archives</p></div>
-        <div class="stat box"><div class="dot" style="--c: var(--green)"></div><div class="big">11</div><p>Kinds of clutter it knows</p></div>
+        <div class="stat box"><div class="dot" style="--c: var(--green)"></div><div class="big">12</div><p>Kinds of clutter it knows</p></div>
         <div class="stat box"><div class="dot" style="--c: var(--pink)"></div><div class="big">0</div><p>Network calls, ever</p></div>
       </div>
     </div>
@@ -280,6 +280,7 @@
         <button role="tab" aria-selected="false" aria-controls="p-claude" id="t-claude">Claude Code</button>
         <button role="tab" aria-selected="false" aria-controls="p-cache" id="t-cache">Caches</button>
         <button role="tab" aria-selected="false" aria-controls="p-files" id="t-files">Your files</button>
+        <button role="tab" aria-selected="false" aria-controls="p-system" id="t-system">System</button>
       </div>
     </div>
     <div class="wrap">
@@ -326,6 +327,15 @@
           <div class="row"><span class="chk"></span><span class="name">dataset.zip</span><span class="size">1.8 GB</span></div>
           <div class="row"><span class="chk"></span><span class="name">Old Project</span><span class="size">640 MB</span></div>
           <div class="row"><span class="chk"></span><span class="name">Xcode_26.xip</span><span class="size">212 MB</span></div>
+        </div></div>
+      </div>
+      <div class="panel" role="tabpanel" id="p-system" aria-labelledby="t-system" hidden>
+        <div><h3>Deep in the system, too.</h3><p>System caches and logs, simulator system caches, temp files untouched for three days, Time Machine local snapshots, old macOS installers, and iPhone backups. One password prompt per clean, and nothing here is checked until you check it.</p></div>
+        <div class="shot" style="--c: #d9d9de"><div class="rows">
+          <div class="row"><span class="chk"></span><span class="name">dyld simulator cache</span><span class="size">2.2 GB</span></div>
+          <div class="row"><span class="chk"></span><span class="name">clang</span><span class="size">1.6 GB</span></div>
+          <div class="row"><span class="chk"></span><span class="name">Install macOS Sequoia</span><span class="size">13.4 GB</span></div>
+          <div class="row"><span class="chk"></span><span class="name">Time Machine snapshot 2026-10-01</span></div>
         </div></div>
       </div>
     </div>

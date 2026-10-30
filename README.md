@@ -19,6 +19,7 @@ A plain Mac app that finds what is filling your disk and cleans it. Built for a 
 | Trash | What is already in the Trash | Deleted |
 | Large Files | Anything over 500 MB in Downloads, Desktop, Documents, Movies | Trash |
 | Old Files | Over 50 MB and not opened in 90 days, same folders | Trash |
+| System | `/Library/Caches`, `/Library/Logs`, simulator system caches, temp files untouched for 3 days, Time Machine local snapshots, old macOS installers, iPhone backups | Asks for your password once per clean. Installers and backups go to the Trash. |
 
 Rebuildable data is preselected. Your own files never are. Every clean is written to `~/Library/Logs/Neuralyzer/clean.log`.
 

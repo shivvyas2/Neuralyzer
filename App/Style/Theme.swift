@@ -30,6 +30,7 @@ enum Theme {
         case .trash: stone
         case .largeFiles: blue
         case .oldFiles: yellow
+        case .system: stone
         }
     }
 

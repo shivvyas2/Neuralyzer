@@ -1,7 +1,7 @@
 import Foundation
 
 public enum CategoryID: String, CaseIterable, Sendable, Hashable {
-    case xcode, simulators, claudeCode, packageCaches, projectBuilds, vms, appCaches, junk, trash, largeFiles, oldFiles
+    case xcode, simulators, claudeCode, packageCaches, projectBuilds, vms, appCaches, junk, trash, largeFiles, oldFiles, system
 
     public var title: String {
         switch self {
@@ -16,6 +16,7 @@ public enum CategoryID: String, CaseIterable, Sendable, Hashable {
         case .trash: "Trash"
         case .largeFiles: "Large Files"
         case .oldFiles: "Old Files"
+        case .system: "System"
         }
     }
 
@@ -32,6 +33,7 @@ public enum CategoryID: String, CaseIterable, Sendable, Hashable {
         case .trash: "trash"
         case .largeFiles: "externaldrive"
         case .oldFiles: "clock.arrow.circlepath"
+        case .system: "gearshape.2"
         }
     }
 }
@@ -45,6 +47,10 @@ public enum Action: Sendable, Hashable {
     case simctlDeleteRuntime(id: String)
     /// Remove the session logs inside a folder, never the names in `keep`.
     case deleteContents(keep: Set<String>)
+    /// Remove permanently with administrator rights, for system folders the user does not own.
+    case adminDelete
+    /// Remove one Time Machine local snapshot, by its date stamp.
+    case tmutilDeleteSnapshot(date: String)
 }
 
 public struct Item: Identifiable, Sendable, Hashable {
@@ -67,6 +73,16 @@ public struct Item: Identifiable, Sendable, Hashable {
         self.bytes = bytes
         self.action = action
         self.preselected = preselected
+    }
+}
+
+extension Item {
+    /// Cleaned with administrator rights, batched into one password prompt.
+    public var needsAdmin: Bool {
+        switch action {
+        case .adminDelete, .tmutilDeleteSnapshot: true
+        default: false
+        }
     }
 }
 

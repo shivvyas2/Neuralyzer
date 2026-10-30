@@ -24,10 +24,13 @@ struct ItemRow: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
                 Spacer(minLength: 16)
-                Text(formatBytes(item.bytes))
-                    .font(.system(size: 15))
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+                // Snapshots have no size of their own, so they show none.
+                if item.bytes > 0 {
+                    Text(formatBytes(item.bytes))
+                        .font(.system(size: 15))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -48,6 +51,7 @@ struct ItemRow: View {
         switch item.action {
         case .simctlDeleteDevice: "iphone"
         case .simctlDeleteRuntime: "cpu"
+        case .tmutilDeleteSnapshot: "clock"
         default:
             item.url.hasDirectoryPath || (try? item.url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
                 ? "folder" : "doc"

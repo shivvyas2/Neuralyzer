@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+- New System card: system caches and logs, simulator system caches, temp files untouched for three days, Time Machine local snapshots, old macOS installers, and iPhone backups. System items are removed with one password prompt per clean.
+- New look: bold outlined category cards, serif titles, and a new logo of three fanned cards.
+- Dark mode uses charcoal instead of pure black.
+
 ## 1.0.1
 
 - A simulator already removed in Xcode, or a file gone before cleaning, is skipped instead of failing.
