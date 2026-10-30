@@ -1,0 +1,11 @@
+{
+  "devices" : {
+    "com.apple.CoreSimulator.SimRuntime.iOS-27-1" : [
+      { "dataPath" : "HOME/Library/Developer/CoreSimulator/Devices/2C414BCA-4659-4ECB-8FDD-5916E9F125C1/data", "udid" : "2C414BCA-4659-4ECB-8FDD-5916E9F125C1", "isAvailable" : true, "state" : "Shutdown", "name" : "iPhone Duo" },
+      { "dataPath" : "HOME/Library/Developer/CoreSimulator/Devices/50B2166C-0A65-4920-A57E-09CF4EEFE6DA/data", "udid" : "50B2166C-0A65-4920-A57E-09CF4EEFE6DA", "isAvailable" : false, "state" : "Shutdown", "name" : "Old Phone" }
+    ],
+    "com.apple.CoreSimulator.SimRuntime.watchOS-27-0" : [
+      { "dataPath" : "HOME/Library/Developer/CoreSimulator/Devices/46CC7B35-89F6-4A27-97B8-5A09107977F7/data", "udid" : "46CC7B35-89F6-4A27-97B8-5A09107977F7", "isAvailable" : true, "state" : "Shutdown", "name" : "Apple Watch" }
+    ]
+  }
+}

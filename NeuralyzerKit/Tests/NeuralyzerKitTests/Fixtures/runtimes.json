@@ -1,0 +1,5 @@
+{
+  "2C7C6B59-8E74-49D0-AF03-53AFD13FBBB3" : { "deletable" : true, "identifier" : "2C7C6B59-8E74-49D0-AF03-53AFD13FBBB3", "runtimeIdentifier" : "com.apple.CoreSimulator.SimRuntime.iOS-27-1", "sizeBytes" : 7874596193, "state" : "Ready", "version" : "27.1" },
+  "CE7C55DD-A283-4879-9068-943A6C9725B2" : { "deletable" : true, "identifier" : "CE7C55DD-A283-4879-9068-943A6C9725B2", "runtimeIdentifier" : "com.apple.CoreSimulator.SimRuntime.watchOS-27-0", "sizeBytes" : 2500000000, "state" : "Ready", "version" : "27.0" },
+  "AAAAAAAA-0000-0000-0000-000000000000" : { "deletable" : false, "identifier" : "AAAAAAAA-0000-0000-0000-000000000000", "runtimeIdentifier" : "com.apple.CoreSimulator.SimRuntime.iOS-26-0", "sizeBytes" : 100, "state" : "Ready", "version" : "26.0" }
+}
