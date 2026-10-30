@@ -63,6 +63,21 @@ final class ContactsTests: XCTestCase {
         XCTAssertEqual(mergedEmails(g), ["a@x.com", "b@x.com"])
     }
 
+    func testPhoneExtensionIgnored() {
+        XCTAssertEqual(normalizedPhone("415-555-0100 ext. 22"), normalizedPhone("4155550100"))
+        XCTAssertEqual(normalizedPhone("415-555-0100 x22"), normalizedPhone("4155550100"))
+    }
+
+    func testDifferentCountryCodesStayDifferent() {
+        XCTAssertNotEqual(normalizedPhone("+44 20 7946 0958"), normalizedPhone("+1 207 946 0958"))
+        XCTAssertEqual(normalizedPhone("+1 415 555 0100"), normalizedPhone("415 555 0100"))
+    }
+
+    func testPhonesWithoutDigitsAreAllKept() {
+        let g = contactGroups([c("a", "A", phones: ["4155550100", "ask front desk"]), c("b", "A", phones: ["4155550100", "see notes"])])[0]
+        XCTAssertEqual(mergedPhones(g), ["4155550100", "ask front desk", "see notes"])
+    }
+
     func testEmptyNamesNeverMatch() {
         XCTAssertTrue(contactGroups([c("a", ""), c("b", "")]).isEmpty)
     }

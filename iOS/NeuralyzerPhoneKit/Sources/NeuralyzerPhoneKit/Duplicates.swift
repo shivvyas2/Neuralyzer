@@ -34,19 +34,26 @@ public func exactDuplicateGroups(_ photos: [PhotoInfo], maxHamming: Int = 2,
 }
 
 /// Near identical photos by visual distance, compared within buckets of similar shape.
-/// The costly `distance` only runs on pairs whose thumbnail hashes are already close,
-/// which keeps a large library to a few thousand comparisons.
+/// The costly `distance` only runs on pairs whose thumbnail hashes are already close, and never more than
+/// `maxComparisons` times, so a huge library cannot stall the scan. `progress` reports 0 to 1.
 public func nearDuplicateGroups(
     _ photos: [PhotoInfo], excluding: Set<String>, distance: (PhotoInfo, PhotoInfo) -> Float?, threshold: Float,
-    prefilterHamming: Int = 14
+    prefilterHamming: Int = 14, maxComparisons: Int = 20_000, progress: (Double) -> Void = { _ in }
 ) -> [PhotoGroup] {
     let candidates = photos.filter { !$0.isVideo && !excluding.contains($0.id) && $0.pixelHeight > 0 && $0.thumbHash != nil && $0.burstID == nil }
-    let buckets = Dictionary(grouping: candidates) { Int((Double($0.pixelWidth) / Double($0.pixelHeight) * 20).rounded()) }
-    return buckets.values.flatMap { bucket in
-        groups(of: bucket, exact: false) { a, b in
-            hammingDistance(a.thumbHash!, b.thumbHash!) <= prefilterHamming && (distance(a, b) ?? .infinity) < threshold
+    let buckets = Array(Dictionary(grouping: candidates) { Int((Double($0.pixelWidth) / Double($0.pixelHeight) * 20).rounded()) }.values)
+    var budget = maxComparisons
+    var out: [PhotoGroup] = []
+    for (index, bucket) in buckets.enumerated() {
+        out += groups(of: bucket, exact: false) { a, b in
+            guard budget > 0, hammingDistance(a.thumbHash!, b.thumbHash!) <= prefilterHamming else { return false }
+            budget -= 1
+            return (distance(a, b) ?? .infinity) < threshold
         }
+        progress(Double(index + 1) / Double(buckets.count))
     }
+    progress(1)
+    return out
 }
 
 /// The copy to keep: a favorite, then an edited one, then the most pixels, then the earliest.

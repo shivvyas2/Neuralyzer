@@ -88,6 +88,13 @@ final class FilesTests: XCTestCase {
         XCTAssertTrue(listFiles(in: folder.url).isEmpty)
     }
 
+    func testNotDownloadedFilesAreNeverJudgedOld() {
+        let now = Date()
+        let cloud = FileInfo(url: folder.url, name: "cloud", bytes: 20_000_000, modified: now.addingTimeInterval(-400 * 86400), isLocal: false)
+        let bigCloud = FileInfo(url: folder.url, name: "bigcloud", bytes: 200_000_000, modified: now, isLocal: false)
+        XCTAssertEqual(largeAndOld([cloud, bigCloud], now: now).map(\.name), ["bigcloud"])
+    }
+
     func testLargeAndOld() {
         let now = Date()
         let files = [

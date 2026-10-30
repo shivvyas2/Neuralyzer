@@ -111,8 +111,9 @@ private func makeGroup(_ copies: [FileInfo], verified: Bool) -> FileGroup {
     return FileGroup(keep: keep, others: copies.filter { $0 != keep }.sorted { $0.url.path < $1.url.path }, verified: verified)
 }
 
-/// Files over `largeBytes`, or over `oldBytes` and not modified in `oldAge`.
+/// Files over `largeBytes`, or over `oldBytes` and not modified in `oldAge`. A file that is not on the
+/// phone only has its placeholder's date, so it can count as large but never as old.
 public func largeAndOld(_ files: [FileInfo], now: Date, largeBytes: Int64 = 100_000_000, oldBytes: Int64 = 10_000_000,
                         oldAge: TimeInterval = 180 * 86400) -> [FileInfo] {
-    files.filter { $0.bytes > largeBytes || ($0.bytes > oldBytes && $0.modified < now.addingTimeInterval(-oldAge)) }
+    files.filter { $0.bytes > largeBytes || ($0.isLocal && $0.bytes > oldBytes && $0.modified < now.addingTimeInterval(-oldAge)) }
 }

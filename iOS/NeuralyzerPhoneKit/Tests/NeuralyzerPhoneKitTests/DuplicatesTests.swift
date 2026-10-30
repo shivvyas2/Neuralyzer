@@ -81,6 +81,20 @@ final class DuplicatesTests: XCTestCase {
         XCTAssertTrue(removing(["o1", "o2"], from: [g]).isEmpty)
     }
 
+    func testNearDuplicateWorkIsCapped() {
+        let photos = (0..<40).map { photo("p\($0)", hash: 0) }
+        var calls = 0
+        _ = nearDuplicateGroups(photos, excluding: [], distance: { _, _ in calls += 1; return 0.9 }, threshold: 0.35, maxComparisons: 25)
+        XCTAssertLessThanOrEqual(calls, 25)
+    }
+
+    func testNearDuplicateProgressReachesOne() {
+        var last = 0.0
+        _ = nearDuplicateGroups((0..<10).map { photo("p\($0)", hash: 0) }, excluding: [], distance: { _, _ in 0.9 }, threshold: 0.35,
+                                progress: { last = $0 })
+        XCTAssertEqual(last, 1)
+    }
+
     func testVideosNeedSimilarDuration() {
         let a = photo("a", video: true, duration: 10, hash: 5)
         let b = photo("b", video: true, duration: 10.3, hash: 5)

@@ -40,9 +40,12 @@ public struct ContactGroup: Sendable, Hashable {
     public let namesAgree: Bool
 }
 
-/// Digits only, last 10, so "+1 (415) 555-0100" and "415.555.0100" match.
+/// Digits only, with any extension dropped and a leading US "1" removed, so "+1 (415) 555-0100",
+/// "415.555.0100" and "415-555-0100 x22" match, while "+44 20 7946 0958" stays its own number.
 public func normalizedPhone(_ s: String) -> String {
-    String(s.filter(\.isNumber).suffix(10))
+    let number = s.prefix { !$0.isLetter && $0 != "#" && $0 != ";" && $0 != "," }
+    let digits = String(number.filter(\.isNumber))
+    return digits.count == 11 && digits.hasPrefix("1") ? String(digits.dropFirst()) : digits
 }
 
 /// Duplicate contacts. A shared phone or email makes a strong match; a matching full name alone makes a weak one.
@@ -90,7 +93,11 @@ public func isPreselected(_ group: ContactGroup) -> Bool {
 }
 
 public func mergedPhones(_ g: ContactGroup) -> [String] {
-    merged(([g.keep] + g.others).flatMap(\.phones), key: normalizedPhone)
+    // Entries with no digits ("ask front desk") are kept as written.
+    merged(([g.keep] + g.others).flatMap(\.phones)) { p in
+        let n = normalizedPhone(p)
+        return n.isEmpty ? "text:" + p.lowercased() : n
+    }
 }
 
 public func mergedEmails(_ g: ContactGroup) -> [String] {
