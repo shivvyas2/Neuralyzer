@@ -1,5 +1,9 @@
 # Changelog
 
+## iPhone 1.0.0
+
+- First iPhone version: duplicate photos and videos, screenshots, screen recordings, bursts, blurry photos, big videos, WhatsApp media, iCloud Drive duplicates and large files, and duplicate contacts.
+
 ## 1.1.1
 
 - A cleaner icon: three fanned cards with a check on the front one.

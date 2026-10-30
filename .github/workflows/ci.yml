@@ -32,3 +32,24 @@ jobs:
         run: xcodegen generate
       - name: Build
         run: xcodebuild -scheme Neuralyzer -configuration Debug build CODE_SIGNING_ALLOWED=NO
+
+  phone-kit:
+    name: NeuralyzerPhoneKit tests
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package tests
+        run: swift test --parallel
+        working-directory: iOS/NeuralyzerPhoneKit
+
+  phone-app:
+    name: Build the iPhone app
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate project
+        run: xcodegen generate
+      - name: Build
+        run: xcodebuild -scheme NeuralyzerPhone -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO
