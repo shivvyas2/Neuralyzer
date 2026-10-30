@@ -6,6 +6,12 @@ public struct PhotoGroup: Sendable, Hashable {
     public let others: [PhotoInfo]
     /// Exact copies are preselected; near identical shots are not.
     public let exact: Bool
+
+    public init(keep: PhotoInfo, others: [PhotoInfo], exact: Bool) {
+        self.keep = keep
+        self.others = others
+        self.exact = exact
+    }
 }
 
 public func hammingDistance(_ a: UInt64, _ b: UInt64) -> Int { (a ^ b).nonzeroBitCount }

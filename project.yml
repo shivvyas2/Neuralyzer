@@ -7,6 +7,8 @@ options:
 packages:
   NeuralyzerKit:
     path: NeuralyzerKit
+  NeuralyzerPhoneKit:
+    path: iOS/NeuralyzerPhoneKit
 targets:
   Neuralyzer:
     type: application
@@ -39,3 +41,35 @@ targets:
         SWIFT_VERSION: "6.0"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         COMBINE_HIDPI_IMAGES: YES
+  NeuralyzerPhone:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources: [iOS/App]
+    dependencies:
+      - package: NeuralyzerPhoneKit
+    info:
+      path: iOS/App/Info.plist
+      properties:
+        CFBundleDisplayName: Neuralyzer
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.utilities
+        ITSAppUsesNonExemptEncryption: false
+        NSPhotoLibraryUsageDescription: Neuralyzer looks for duplicate and unneeded photos so you can delete them.
+        NSContactsUsageDescription: Neuralyzer looks for duplicate contacts so you can merge them.
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shivvyas.neuralyzer.ios
+        PRODUCT_NAME: Neuralyzer
+        MARKETING_VERSION: 1.0.0
+        CURRENT_PROJECT_VERSION: 1
+        DEVELOPMENT_TEAM: Z42YU5W6WY
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "6.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

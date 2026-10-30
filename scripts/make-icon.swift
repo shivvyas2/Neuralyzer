@@ -1,5 +1,5 @@
 // Draws the app icon at 1024 px: three outlined cards fanned out on a white tile.
-// Run: swift scripts/make-icon.swift out.png
+// Run: swift scripts/make-icon.swift out.png [ios]
 import AppKit
 
 let size: CGFloat = 1024
@@ -8,12 +8,17 @@ image.lockFocus()
 let ctx = NSGraphicsContext.current!.cgContext
 let ink = NSColor(red: 0.12, green: 0.12, blue: 0.14, alpha: 1)
 
-// Tile.
-let tile = NSBezierPath(roundedRect: NSRect(x: 100, y: 100, width: 824, height: 824), xRadius: 185, yRadius: 185)
+// Tile. Pass "ios" as a second argument for a full bleed square; iOS rounds the corners itself.
+let fullBleed = CommandLine.arguments.count > 2 && CommandLine.arguments[2] == "ios"
+let tile = fullBleed
+    ? NSBezierPath(rect: NSRect(x: 0, y: 0, width: size, height: size))
+    : NSBezierPath(roundedRect: NSRect(x: 100, y: 100, width: 824, height: 824), xRadius: 185, yRadius: 185)
 NSGradient(colors: [NSColor.white, NSColor(red: 0.95, green: 0.95, blue: 0.96, alpha: 1)])!.draw(in: tile, angle: -90)
-ink.withAlphaComponent(0.08).setStroke()
-tile.lineWidth = 4
-tile.stroke()
+if !fullBleed {
+    ink.withAlphaComponent(0.08).setStroke()
+    tile.lineWidth = 4
+    tile.stroke()
+}
 
 // One card, rotated about the bottom center of the tile.
 func card(_ color: NSColor, angle: CGFloat, dx: CGFloat, dy: CGFloat, check: Bool = false) {

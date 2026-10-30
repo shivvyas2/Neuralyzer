@@ -25,6 +25,12 @@ public struct FileGroup: Sendable, Hashable {
     public let others: [FileInfo]
     /// True when every copy was compared byte for byte. Unverified groups are never preselected.
     public let verified: Bool
+
+    public init(keep: FileInfo, others: [FileInfo], verified: Bool) {
+        self.keep = keep
+        self.others = others
+        self.verified = verified
+    }
 }
 
 /// Every file under `folder`, including iCloud files that are not downloaded. Never triggers a download.
