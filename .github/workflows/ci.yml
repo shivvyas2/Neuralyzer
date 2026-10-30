@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  kit:
+    name: NeuralyzerKit tests
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift and Xcode versions
+        run: swift --version && xcodebuild -version
+      - name: Package tests
+        run: swift test --parallel
+        working-directory: NeuralyzerKit
+
+  app:
+    name: Build the app
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate project
+        run: xcodegen generate
+      - name: Build
+        run: xcodebuild -scheme Neuralyzer -configuration Debug build CODE_SIGNING_ALLOWED=NO

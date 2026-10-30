@@ -1,0 +1,28 @@
+name: Bug report
+description: Something does not work the way it should
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you saw instead.
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where
+      placeholder: "Simulators card, clean sheet, first launch"
+    validations:
+      required: true
+  - type: input
+    id: mac
+    attributes:
+      label: Mac and macOS
+      placeholder: "MacBook Pro M4, macOS 27.0"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Clean log or screenshots
+      description: Lines from ~/Library/Logs/Neuralyzer/clean.log, or a screenshot. Please remove anything personal.

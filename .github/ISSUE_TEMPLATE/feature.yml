@@ -1,0 +1,16 @@
+name: Feature request
+description: Something Neuralyzer should find or do
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What should it do
+      description: The folder or kind of data, and where it lives on disk.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: How big it gets for you, and whether it rebuilds itself.
