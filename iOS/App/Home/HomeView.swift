@@ -11,10 +11,14 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 22) {
                     header
                     if store.scanning {
-                        ProgressView(value: store.progress).tint(Theme.ink)
+                        VStack(alignment: .leading, spacing: 6) {
+                            ProgressView(value: store.progress).tint(Theme.ink)
+                            Text(store.progress < 0.55 ? "Reading your photos" : store.progress < 0.7 ? "Checking iCloud Drive and contacts" : "Looking for similar photos")
+                                .font(.system(size: 13)).foregroundStyle(.secondary)
+                        }
                     }
                     accessNotice
-                    if !store.scanning && !store.recommended.isEmpty {
+                    if !store.recommended.isEmpty {
                         RecommendedCard()
                     }
                     LazyVGrid(columns: columns, spacing: 14) {

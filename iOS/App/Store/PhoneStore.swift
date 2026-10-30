@@ -76,28 +76,45 @@ final class PhoneStore {
 
     // MARK: Scanning
 
+    /// Scans in phases and shows each one as soon as it is ready: photo categories and exact duplicates,
+    /// then iCloud Drive files and contacts, then near identical photos, which is the slowest and has a time limit.
     func scan() {
         guard !scanning else { return }
         scanning = true
         progress = 0
+        results = [:]
+        recommended = []
+        selection = []
         let scanner = photos
         let canPhotos = photosAccess == .authorized || photosAccess == .limited
         let canContacts = contactsAccess == .authorized || contactsAccess == .limited
         Task {
-            let (found, allPhotos) = await Task.detached(priority: .userInitiated) { () -> ([PhoneCategory: CategoryContent], [PhotoInfo]) in
+            var allPhotos: [PhotoInfo] = []
+            var inExact = Set<String>()
+            if canPhotos {
+                allPhotos = await Task.detached(priority: .userInitiated) {
+                    scanner.scan { p in Task { @MainActor in self.progress = p * 0.55 } }
+                }.value
+                let found = await Task.detached(priority: .userInitiated) { () -> [PhoneCategory: CategoryContent] in
+                    // Vision confirms each exact match; the budget keeps a library of similar screenshots quick.
+                    var budget = 3_000
+                    let exact = exactDuplicateGroups(allPhotos, confirm: { a, b in
+                        guard budget > 0 else { return false }
+                        budget -= 1
+                        return (scanner.distance(a, b) ?? 1) < 0.05
+                    })
+                    var out: [PhoneCategory: CategoryContent] = [.duplicates: CategoryContent(photoGroups: exact)]
+                    for (category, list) in classify(allPhotos) { out[category] = CategoryContent(photos: list) }
+                    return out
+                }.value
+                inExact = Set((found[.duplicates]?.photoGroups ?? []).flatMap { [$0.keep.id] + $0.others.map(\.id) })
+                photoIndex = Dictionary(allPhotos.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+                publish(found, photos: allPhotos)
+            }
+            progress = 0.65
+
+            let others = await Task.detached(priority: .userInitiated) { () -> [PhoneCategory: CategoryContent] in
                 var out: [PhoneCategory: CategoryContent] = [:]
-                var allPhotos: [PhotoInfo] = []
-                if canPhotos {
-                    let all = scanner.scan { p in Task { @MainActor in self.progress = p * 0.6 } }
-                    allPhotos = all
-                    let exact = exactDuplicateGroups(all, confirm: { a, b in (scanner.distance(a, b) ?? 1) < 0.05 })
-                    let inExact = Set(exact.flatMap { [$0.keep.id] + $0.others.map(\.id) })
-                    let near = nearDuplicateGroups(all, excluding: inExact, distance: scanner.distance, threshold: 0.35,
-                                                   progress: { p in Task { @MainActor in self.progress = 0.6 + p * 0.3 } })
-                    out[.duplicates] = CategoryContent(photoGroups: exact + near)
-                    for (category, list) in classify(all) { out[category] = CategoryContent(photos: list) }
-                }
-                Task { @MainActor in self.progress = 0.9 }
                 if let files = FolderAccess.withFolder({ listFiles(in: $0) }) {
                     let groups = duplicateFileGroups(files, hash: sha256)
                     out[.icloudDuplicates] = CategoryContent(fileGroups: groups)
@@ -107,18 +124,37 @@ final class PhoneStore {
                 if canContacts {
                     out[.contacts] = CategoryContent(contactGroups: contactGroups(ContactScanner().scan()))
                 }
-                return (out, allPhotos)
+                return out
             }.value
-            results = found
-            photoIndex = Dictionary(allPhotos.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-            let files = found.values.flatMap { $0.files + $0.fileGroups.flatMap { [$0.keep] + $0.others } }
+            let files = others.values.flatMap { $0.files + $0.fileGroups.flatMap { [$0.keep] + $0.others } }
             fileIndex = Dictionary(files.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-            recommended = recommendations(photos: allPhotos, photoGroups: found[.duplicates]?.photoGroups ?? [],
-                                          fileGroups: found[.icloudDuplicates]?.fileGroups ?? [], now: Date())
-            selection = Self.preselection(found)
+            publish(others, photos: allPhotos)
+            progress = 0.7
+
+            if canPhotos {
+                let excluded = inExact
+                let near = await Task.detached(priority: .utility) {
+                    nearDuplicateGroups(allPhotos, excluding: excluded, distance: scanner.distance, threshold: 0.35,
+                                        maxComparisons: 4_000, deadline: Date().addingTimeInterval(45),
+                                        progress: { p in Task { @MainActor in self.progress = 0.7 + p * 0.3 } })
+                }.value
+                if !near.isEmpty {
+                    var duplicates = results[.duplicates] ?? CategoryContent()
+                    duplicates.photoGroups += near
+                    publish([.duplicates: duplicates], photos: allPhotos)
+                }
+            }
             progress = 1
             scanning = false
         }
+    }
+
+    /// Shows new results, checks their defaults, and refreshes the recommendations.
+    private func publish(_ found: [PhoneCategory: CategoryContent], photos: [PhotoInfo]) {
+        for (category, content) in found { results[category] = content }
+        selection.formUnion(Self.preselection(found))
+        recommended = recommendations(photos: photos, photoGroups: results[.duplicates]?.photoGroups ?? [],
+                                      fileGroups: results[.icloudDuplicates]?.fileGroups ?? [], now: Date())
     }
 
     private static func preselection(_ results: [PhoneCategory: CategoryContent]) -> Set<String> {

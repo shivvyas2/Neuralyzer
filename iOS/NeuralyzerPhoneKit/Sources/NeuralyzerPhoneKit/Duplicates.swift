@@ -34,26 +34,49 @@ public func exactDuplicateGroups(_ photos: [PhotoInfo], maxHamming: Int = 2,
 }
 
 /// Near identical photos by visual distance, compared within buckets of similar shape.
-/// The costly `distance` only runs on pairs whose thumbnail hashes are already close, and never more than
-/// `maxComparisons` times, so a huge library cannot stall the scan. `progress` reports 0 to 1.
+/// The costly `distance` only runs on pairs whose thumbnail hashes are already close, never more than
+/// `maxComparisons` times, and not after `deadline`, so a huge library cannot stall the scan.
+/// `progress` moves photo by photo from 0 to 1.
 public func nearDuplicateGroups(
     _ photos: [PhotoInfo], excluding: Set<String>, distance: (PhotoInfo, PhotoInfo) -> Float?, threshold: Float,
-    prefilterHamming: Int = 14, maxComparisons: Int = 20_000, progress: (Double) -> Void = { _ in }
+    prefilterHamming: Int = 14, maxComparisons: Int = 20_000, deadline: Date? = nil, progress: (Double) -> Void = { _ in }
 ) -> [PhotoGroup] {
     let candidates = photos.filter { !$0.isVideo && !excluding.contains($0.id) && $0.pixelHeight > 0 && $0.thumbHash != nil && $0.burstID == nil }
     let buckets = Array(Dictionary(grouping: candidates) { Int((Double($0.pixelWidth) / Double($0.pixelHeight) * 20).rounded()) }.values)
+    let total = max(candidates.count, 1)
+    var done = 0
     var budget = maxComparisons
     var out: [PhotoGroup] = []
-    for (index, bucket) in buckets.enumerated() {
-        out += groups(of: bucket, exact: false) { a, b in
-            guard budget > 0, hammingDistance(a.thumbHash!, b.thumbHash!) <= prefilterHamming else { return false }
-            budget -= 1
-            return (distance(a, b) ?? .infinity) < threshold
+    bucketLoop: for bucket in buckets {
+        var parent = Array(bucket.indices)
+        func root(_ i: Int) -> Int {
+            var i = i
+            while parent[i] != i { parent[i] = parent[parent[i]]; i = parent[i] }
+            return i
         }
-        progress(Double(index + 1) / Double(buckets.count))
+        for i in bucket.indices {
+            if budget <= 0 || (deadline.map { Date() > $0 } ?? false) { break bucketLoop }
+            for j in bucket.indices where j > i && budget > 0 {
+                guard hammingDistance(bucket[i].thumbHash!, bucket[j].thumbHash!) <= prefilterHamming else { continue }
+                budget -= 1
+                if (distance(bucket[i], bucket[j]) ?? .infinity) < threshold { parent[root(j)] = root(i) }
+            }
+            done += 1
+            if done % max(1, total / 100) == 0 { progress(Double(done) / Double(total)) }
+        }
+        let roots = bucket.indices.map(root)
+        out += collect(bucket, roots: roots)
     }
     progress(1)
     return out
+}
+
+private func collect(_ bucket: [PhotoInfo], roots: [Int]) -> [PhotoGroup] {
+    Dictionary(grouping: bucket.indices) { roots[$0] }.values.filter { $0.count > 1 }.map { indices in
+        let members = indices.map { bucket[$0] }
+        let keep = pickKeeper(members)
+        return PhotoGroup(keep: keep, others: members.filter { $0.id != keep.id }, exact: false)
+    }
 }
 
 /// The copy to keep: a favorite, then an edited one, then the most pixels, then the earliest.
