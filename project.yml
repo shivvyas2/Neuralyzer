@@ -59,6 +59,7 @@ targets:
         NSPhotoLibraryUsageDescription: Neuralyzer looks for duplicate and unneeded photos so you can delete them.
         NSContactsUsageDescription: Neuralyzer looks for duplicate contacts so you can merge them.
         UIFileSharingEnabled: true
+        PHPhotoLibraryPreventAutomaticLimitedAccessAlert: true
         LSSupportsOpeningDocumentsInPlace: true
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]

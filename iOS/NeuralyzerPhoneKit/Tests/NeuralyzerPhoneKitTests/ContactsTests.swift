@@ -13,15 +13,33 @@ final class ContactsTests: XCTestCase {
     }
 
     func testSharedPhoneGroups() {
-        let groups = contactGroups([c("a", "Sam", phones: ["+1 415 555 0100"], filled: 5), c("b", "Samuel", phones: ["4155550100"])])
+        let groups = contactGroups([c("a", "Sam", phones: ["+1 415 555 0100"], filled: 5), c("b", "Sam", phones: ["4155550100"])])
         XCTAssertEqual(groups.count, 1)
         XCTAssertTrue(groups[0].strong)
         XCTAssertEqual(groups[0].keep.id, "a")
         XCTAssertTrue(isPreselected(groups[0]))
     }
 
+    func testDifferentNamesSharingAPhoneAreNotPreselected() {
+        let groups = contactGroups([c("a", "Sam", phones: ["4155550100"]), c("b", "Alex", phones: ["4155550100"])])
+        XCTAssertEqual(groups.count, 1)
+        XCTAssertFalse(isPreselected(groups[0]))
+    }
+
+    func testOneEmptyNameStillPreselected() {
+        let groups = contactGroups([c("a", "Sam", phones: ["4155550100"]), c("b", "", phones: ["4155550100"])])
+        XCTAssertTrue(isPreselected(groups[0]))
+    }
+
+    func testSwitchboardNumberDoesNotChainPeople() {
+        let people = (0..<5).map { c("p\($0)", "Person\($0)", phones: ["+1 800 555 0100"]) }
+        let groups = contactGroups(people)
+        XCTAssertTrue(groups.allSatisfy { !isPreselected($0) })
+        XCTAssertTrue(groups.allSatisfy { !$0.strong })
+    }
+
     func testSharedEmailIgnoresCase() {
-        XCTAssertEqual(contactGroups([c("a", "A", emails: ["Me@X.com"]), c("b", "B", emails: ["me@x.com"])]).count, 1)
+        XCTAssertEqual(contactGroups([c("a", "A", emails: ["Me@X.com"]), c("b", "A", emails: ["me@x.com"])]).count, 1)
     }
 
     func testSameNameOnlyIsWeak() {

@@ -54,6 +54,27 @@ final class FilesTests: XCTestCase {
         XCTAssertEqual(files.map(\.name), ["movie.mov"])
         XCTAssertEqual(files.first?.bytes, 12345)
         XCTAssertEqual(files.first?.isLocal, false)
+        XCTAssertEqual(files.first?.url.lastPathComponent, "movie.mov")
+    }
+
+    func testPlaceholderWithEmojiNameUsesRealURL() throws {
+        let plist = try PropertyListSerialization.data(fromPropertyList: ["NSURLNameKey": "Trip 🌴.mov", "NSURLFileSizeKey": 10], format: .binary, options: 0)
+        try plist.write(to: folder.url.appendingPathComponent(".Trip 🌴.mov.icloud"))
+        let url = try XCTUnwrap(listFiles(in: folder.url).first?.url)
+        XCTAssertEqual(url.lastPathComponent, "Trip 🌴.mov")
+        XCTAssertEqual(url.deletingLastPathComponent().resolvingSymlinksInPath(), folder.url.resolvingSymlinksInPath())
+    }
+
+    func testUnverifiedGroupLeavesOutVerifiedCopies() {
+        let a = FileInfo(url: URL(fileURLWithPath: "/A/IMG.pdf"), name: "IMG.pdf", bytes: 500, modified: old, isLocal: true)
+        let b = FileInfo(url: URL(fileURLWithPath: "/B/IMG.pdf"), name: "IMG.pdf", bytes: 500, modified: Date(), isLocal: true)
+        let cloud = FileInfo(url: URL(fileURLWithPath: "/C/IMG.pdf"), name: "IMG.pdf", bytes: 500, modified: Date(), isLocal: false)
+        let groups = duplicateFileGroups([a, b, cloud], hash: { _ in "same" })
+        let verified = groups.filter(\.verified)
+        let unverified = groups.filter { !$0.verified }
+        XCTAssertEqual(verified.count, 1)
+        XCTAssertEqual(unverified.count, 1)
+        XCTAssertEqual(Set(([unverified[0].keep] + unverified[0].others).map(\.url.path)), ["/A/IMG.pdf", "/C/IMG.pdf"])
     }
 
     func testNameWithSpacesAndEmoji() {

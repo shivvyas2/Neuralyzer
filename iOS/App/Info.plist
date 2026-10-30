@@ -30,6 +30,8 @@
 	<string>Neuralyzer looks for duplicate contacts so you can merge them.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Neuralyzer looks for duplicate and unneeded photos so you can delete them.</string>
+	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
+	<true/>
 	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>UILaunchScreen</key>

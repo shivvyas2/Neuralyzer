@@ -36,6 +36,8 @@ public struct ContactGroup: Sendable, Hashable {
     public let strong: Bool
     /// Every copy is in the same account, so a merge never deletes across accounts.
     public let sameContainer: Bool
+    /// Every copy has the same name, or no name.
+    public let namesAgree: Bool
 }
 
 /// Digits only, last 10, so "+1 (415) 555-0100" and "415.555.0100" match.
@@ -53,15 +55,17 @@ public func contactGroups(_ contacts: [ContactInfo]) -> [ContactGroup] {
         return i
     }
     func link(by key: (ContactInfo) -> [String], strong: Bool) {
-        var seen: [String: Int] = [:]
+        var holders: [String: [Int]] = [:]
         for (i, contact) in contacts.enumerated() {
-            for k in key(contact) where !k.isEmpty {
-                if let j = seen[k] {
-                    parent[find(&parent, i)] = find(&parent, j)
-                    if strong { strongParent[find(&strongParent, i)] = find(&strongParent, j) }
-                } else {
-                    seen[k] = i
-                }
+            for k in Set(key(contact)) where !k.isEmpty { holders[k, default: []].append(i) }
+        }
+        for indices in holders.values where indices.count > 1 {
+            // A number or email held by three or more contacts is a switchboard or a shared inbox,
+            // not proof of a duplicate, so it never links anyone.
+            if strong && indices.count > 2 { continue }
+            for i in indices.dropFirst() {
+                parent[find(&parent, i)] = find(&parent, indices[0])
+                if strong { strongParent[find(&strongParent, i)] = find(&strongParent, indices[0]) }
             }
         }
     }
@@ -74,14 +78,15 @@ public func contactGroups(_ contacts: [ContactInfo]) -> [ContactGroup] {
         let members = indices.map { contacts[$0] }
         let keep = members.min { ($1.filledFields, $0.id) < ($0.filledFields, $1.id) }!
         let strong = Set(indices.map { find(&strongParent, $0) }).count == 1
+        let names = Set(members.map(\.normalizedName).filter { !$0.isEmpty })
         return ContactGroup(keep: keep, others: members.filter { $0.id != keep.id }, strong: strong,
-                            sameContainer: Set(members.map(\.container)).count == 1)
+                            sameContainer: Set(members.map(\.container)).count == 1, namesAgree: names.count <= 1)
     }
 }
 
-/// Only sure matches inside one account are checked by default.
+/// Only sure matches inside one account, with the same name, are checked by default.
 public func isPreselected(_ group: ContactGroup) -> Bool {
-    group.strong && group.sameContainer
+    group.strong && group.sameContainer && group.namesAgree
 }
 
 public func mergedPhones(_ g: ContactGroup) -> [String] {

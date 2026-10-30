@@ -35,7 +35,8 @@ public struct FileGroup: Sendable, Hashable {
 
 /// Every file under `folder`, including iCloud files that are not downloaded. Never triggers a download.
 public func listFiles(in folder: URL) -> [FileInfo] {
-    let keys: [URLResourceKey] = [.isRegularFileKey, .fileSizeKey, .contentModificationDateKey]
+    let keys: [URLResourceKey] = [.isRegularFileKey, .fileSizeKey, .contentModificationDateKey,
+                                  .isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey]
     guard let walker = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: keys,
                                                       options: [.skipsPackageDescendants], errorHandler: { _, _ in true }) else { return [] }
     var files: [FileInfo] = []
@@ -47,7 +48,9 @@ public func listFiles(in folder: URL) -> [FileInfo] {
             if name.hasSuffix(".icloud"), let placeholder = placeholderInfo(url, modified: modified) { files.append(placeholder) }
             continue
         }
-        files.append(FileInfo(url: url, name: name, bytes: Int64(v.fileSize ?? 0), modified: modified, isLocal: true))
+        // An iCloud item shown under its real name but not downloaded is not local; reading it would download it.
+        let local = v.isUbiquitousItem != true || v.ubiquitousItemDownloadingStatus == .current
+        files.append(FileInfo(url: url, name: name, bytes: Int64(v.fileSize ?? 0), modified: modified, isLocal: local))
     }
     return files
 }
@@ -59,7 +62,9 @@ private func placeholderInfo(_ url: URL, modified: Date) -> FileInfo? {
     let fallback = String(url.lastPathComponent.dropFirst().dropLast(".icloud".count))
     let name = plist["NSURLNameKey"] as? String ?? fallback
     let bytes = (plist["NSURLFileSizeKey"] as? NSNumber)?.int64Value ?? 0
-    return FileInfo(url: url, name: name, bytes: bytes, modified: modified, isLocal: false)
+    // The real item's URL, so trashing acts on the file and not on its placeholder.
+    return FileInfo(url: url.deletingLastPathComponent().appendingPathComponent(name), name: name, bytes: bytes,
+                    modified: modified, isLocal: false)
 }
 
 /// SHA-256 of a local file, read in 1 MB chunks.
@@ -83,12 +88,18 @@ public func duplicateFileGroups(_ files: [FileInfo], hash: (URL) -> String?) -> 
         if local.count > 1 {
             for file in local { if let h = hash(file.url) { byHash[h, default: []].append(file) } }
         }
+        var inVerified = Set<URL>()
+        var candidates = local
         for copies in byHash.values where copies.count > 1 {
-            groups.append(makeGroup(copies, verified: true))
+            let group = makeGroup(copies, verified: true)
+            groups.append(group)
+            // Only the kept copy of a verified group may also stand for it in a name match.
+            inVerified.formUnion(group.others.map(\.url))
         }
+        candidates.removeAll { inVerified.contains($0.url) }
         let cloud = sameSize.filter { !$0.isLocal }
         for name in Set(cloud.map(\.name)) {
-            let copies = sameSize.filter { $0.name == name }
+            let copies = (candidates + cloud).filter { $0.name == name }
             if copies.count > 1 { groups.append(makeGroup(copies, verified: false)) }
         }
     }

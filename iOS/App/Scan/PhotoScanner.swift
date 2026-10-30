@@ -21,7 +21,8 @@ final class PhotoScanner: @unchecked Sendable {
         out.reserveCapacity(assets.count)
         let total = max(assets.count, 1)
         assets.enumerateObjects { asset, index, _ in
-            out.append(self.info(for: asset, whatsapp: whatsapp))
+            // Thumbnails are autoreleased; drain them per photo so big libraries do not run out of memory.
+            autoreleasepool { out.append(self.info(for: asset, whatsapp: whatsapp)) }
             if index % 50 == 0 { progress(Double(index) / Double(total)) }
         }
         progress(1)
@@ -41,7 +42,8 @@ final class PhotoScanner: @unchecked Sendable {
         return PhotoInfo(
             id: asset.localIdentifier, isVideo: isVideo, pixelWidth: asset.pixelWidth, pixelHeight: asset.pixelHeight,
             duration: asset.duration, created: asset.creationDate, isFavorite: asset.isFavorite,
-            hasEdits: asset.modificationDate.map { m in asset.creationDate.map { m.timeIntervalSince($0) > 5 } ?? false } ?? false,
+            // modificationDate also changes on favoriting and syncing, so it says nothing about edits.
+            hasEdits: false,
             isScreenshot: asset.mediaSubtypes.contains(.photoScreenshot), originalFilename: filename,
             burstID: asset.burstIdentifier, isBurstRepresentative: asset.representsBurst,
             isBurstUserPick: asset.burstSelectionTypes.contains(.userPick), inWhatsAppAlbum: whatsapp.contains(asset.localIdentifier),
@@ -94,11 +96,14 @@ final class PhotoScanner: @unchecked Sendable {
 
     private func featurePrint(_ id: String) -> VNFeaturePrintObservation? {
         if let cached = lock.withLock({ printCache[id] }) { return cached }
-        guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject,
-              let image = thumbnail(asset, side: 256) else { return nil }
-        let request = VNGenerateImageFeaturePrintRequest()
-        try? VNImageRequestHandler(cgImage: image).perform([request])
-        guard let print = request.results?.first as? VNFeaturePrintObservation else { return nil }
+        let print: VNFeaturePrintObservation? = autoreleasepool {
+            guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject,
+                  let image = thumbnail(asset, side: 256) else { return nil }
+            let request = VNGenerateImageFeaturePrintRequest()
+            try? VNImageRequestHandler(cgImage: image).perform([request])
+            return request.results?.first as? VNFeaturePrintObservation
+        }
+        guard let print else { return nil }
         lock.withLock { printCache[id] = print }
         return print
     }

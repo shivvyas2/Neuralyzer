@@ -31,10 +31,10 @@ struct CategoryDetailView: View {
         .confirmationDialog("Move \(selectedFiles(content)) files to the Trash?", isPresented: $confirmFiles, titleVisibility: .visible) {
             Button("Move to Trash", role: .destructive) { _ = store.trashFiles(in: category) }
         }
-        .confirmationDialog("Merge \(selectedGroups(content)) contacts?", isPresented: $confirmContacts, titleVisibility: .visible) {
+        .confirmationDialog("Merge and delete \(deletedContacts(content)) contacts?", isPresented: $confirmContacts, titleVisibility: .visible) {
             Button("Merge") { _ = store.mergeContacts() }
         } message: {
-            Text("A backup is saved in Files, in the Neuralyzer folder.")
+            Text("Their details move into the contact that stays. A backup is saved in Files, in the Neuralyzer folder.")
         }
     }
 
@@ -48,8 +48,11 @@ struct CategoryDetailView: View {
                 Button("Delete \(formatted(selectedBytes(content)))") { confirmFiles = true }
                     .disabled(selectedFiles(content) == 0)
             } else {
-                Button("Delete \(aboutSize(selectedBytes(content)))") { Task { _ = await store.deletePhotos(in: category) } }
-                    .disabled(selectedBytes(content) == 0)
+                VStack(spacing: 8) {
+                    Button("Delete \(aboutSize(selectedBytes(content)))") { Task { _ = await store.deletePhotos(in: category) } }
+                        .disabled(selectedBytes(content) == 0)
+                    Text("Space frees after Recently Deleted is emptied.").font(.system(size: 12)).foregroundStyle(.secondary)
+                }
             }
         }
         .buttonStyle(InkButtonStyle())
@@ -65,6 +68,10 @@ struct CategoryDetailView: View {
 
     private func selectedFiles(_ c: CategoryContent) -> Int {
         (c.files + c.fileGroups.flatMap(\.others)).filter { store.selection.contains($0.id) }.count
+    }
+
+    private func deletedContacts(_ c: CategoryContent) -> Int {
+        c.contactGroups.filter { store.selection.contains($0.keep.id) }.reduce(0) { $0 + $1.others.count }
     }
 
     private func selectedGroups(_ c: CategoryContent) -> Int {

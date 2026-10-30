@@ -13,6 +13,7 @@ struct HomeView: View {
                     if store.scanning {
                         ProgressView(value: store.progress).tint(Theme.ink)
                     }
+                    accessNotice
                     LazyVGrid(columns: columns, spacing: 14) {
                         ForEach(store.categories, id: \.self) { category in
                             NavigationLink(value: category) { CategoryCard(category: category) }
@@ -29,6 +30,22 @@ struct HomeView: View {
             .toolbar(.hidden, for: .navigationBar)
         }
         .onAppear { if store.results.isEmpty && !store.scanning { store.scan() } }
+    }
+
+    @ViewBuilder
+    private var accessNotice: some View {
+        switch store.photosAccess {
+        case .denied, .restricted:
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Neuralyzer needs Photos access to find duplicates.").font(.system(size: 15, weight: .medium))
+                Button("Open Settings") { UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!) }
+                    .buttonStyle(InkButtonStyle())
+            }
+        case .limited:
+            Text("Neuralyzer can see only the photos you chose.").font(.system(size: 14)).foregroundStyle(.secondary)
+        default:
+            EmptyView()
+        }
     }
 
     private var header: some View {

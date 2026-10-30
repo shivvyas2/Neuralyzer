@@ -64,6 +64,23 @@ final class DuplicatesTests: XCTestCase {
         XCTAssertEqual(calls, 0)
     }
 
+    func testBurstFramesAreNeverDuplicates() {
+        let groups = exactDuplicateGroups([photo("f1", burst: "B", hash: 7), photo("f2", burst: "B", representative: true, hash: 7)])
+        XCTAssertTrue(groups.isEmpty)
+    }
+
+    func testExactNeedsConfirmation() {
+        let groups = exactDuplicateGroups([photo("a", hash: 7), photo("b", hash: 7)], confirm: { _, _ in false })
+        XCTAssertTrue(groups.isEmpty)
+    }
+
+    func testRemovingKeeperDropsTheGroup() {
+        let g = PhotoGroup(keep: photo("k"), others: [photo("o1"), photo("o2")], exact: true)
+        XCTAssertTrue(removing(["k"], from: [g]).isEmpty)
+        XCTAssertEqual(removing(["o1"], from: [g]).first?.others.map(\.id), ["o2"])
+        XCTAssertTrue(removing(["o1", "o2"], from: [g]).isEmpty)
+    }
+
     func testVideosNeedSimilarDuration() {
         let a = photo("a", video: true, duration: 10, hash: 5)
         let b = photo("b", video: true, duration: 10.3, hash: 5)

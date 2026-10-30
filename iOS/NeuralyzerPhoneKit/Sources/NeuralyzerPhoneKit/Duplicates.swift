@@ -18,12 +18,17 @@ public func hammingDistance(_ a: UInt64, _ b: UInt64) -> Int { (a ^ b).nonzeroBi
 
 /// Copies with the same pixel size and nearly the same thumbnail, whatever their dates.
 /// Re-saved WhatsApp photos and re-imports carry new dates, so dates are ignored.
-public func exactDuplicateGroups(_ photos: [PhotoInfo], maxHamming: Int = 2) -> [PhotoGroup] {
-    let hashed = photos.filter { $0.thumbHash != nil }
+/// A small thumbnail hash also matches posed shots taken seconds apart, so every pair must pass
+/// `confirm` (the app checks a near zero Vision distance) before it counts as an exact copy.
+/// Burst frames are left to the Bursts card, which knows the representative and your picks.
+public func exactDuplicateGroups(_ photos: [PhotoInfo], maxHamming: Int = 2,
+                                 confirm: (PhotoInfo, PhotoInfo) -> Bool = { _, _ in true }) -> [PhotoGroup] {
+    let hashed = photos.filter { $0.thumbHash != nil && $0.burstID == nil }
     let buckets = Dictionary(grouping: hashed) { "\($0.isVideo)-\($0.pixelWidth)x\($0.pixelHeight)" }
     return buckets.values.flatMap { bucket in
         groups(of: bucket, exact: true) { a, b in
             hammingDistance(a.thumbHash!, b.thumbHash!) <= maxHamming && (!a.isVideo || abs(a.duration - b.duration) <= 0.5)
+                && confirm(a, b)
         }
     }
 }
@@ -35,7 +40,7 @@ public func nearDuplicateGroups(
     _ photos: [PhotoInfo], excluding: Set<String>, distance: (PhotoInfo, PhotoInfo) -> Float?, threshold: Float,
     prefilterHamming: Int = 14
 ) -> [PhotoGroup] {
-    let candidates = photos.filter { !$0.isVideo && !excluding.contains($0.id) && $0.pixelHeight > 0 && $0.thumbHash != nil }
+    let candidates = photos.filter { !$0.isVideo && !excluding.contains($0.id) && $0.pixelHeight > 0 && $0.thumbHash != nil && $0.burstID == nil }
     let buckets = Dictionary(grouping: candidates) { Int((Double($0.pixelWidth) / Double($0.pixelHeight) * 20).rounded()) }
     return buckets.values.flatMap { bucket in
         groups(of: bucket, exact: false) { a, b in
@@ -57,6 +62,16 @@ public func pickKeeper(_ group: [PhotoInfo]) -> PhotoInfo {
         default: return a.id < b.id
         }
     }!
+}
+
+/// Groups after `ids` were deleted. A group whose kept copy is gone is dropped entirely, so its other
+/// copies are never deleted from here with nothing left behind.
+public func removing(_ ids: Set<String>, from groups: [PhotoGroup]) -> [PhotoGroup] {
+    groups.compactMap { g in
+        guard !ids.contains(g.keep.id) else { return nil }
+        let others = g.others.filter { !ids.contains($0.id) }
+        return others.isEmpty ? nil : PhotoGroup(keep: g.keep, others: others, exact: g.exact)
+    }
 }
 
 /// Connected groups under `linked`, by union find.
