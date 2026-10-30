@@ -100,8 +100,14 @@ final class RuleTests: XCTestCase {
 
     // MARK: Junk, Trash, VMs, build folders
 
+    func testRecentInstallersAreNotJunk() async {
+        home.file("Downloads/Fresh.dmg")
+        let names = await scan(JunkRule()).map(\.name)
+        XCTAssertFalse(names.contains("Fresh.dmg"))
+    }
+
     func testJunkInstallersAreTrashed() async {
-        home.file("Downloads/Setup.dmg")
+        home.file("Downloads/Setup.dmg", modified: Date().addingTimeInterval(-40 * 86400))
         home.file("Downloads/notes.txt")
         home.file("Library/Logs/DiagnosticReports/crash.ips")
         let items = await scan(JunkRule())

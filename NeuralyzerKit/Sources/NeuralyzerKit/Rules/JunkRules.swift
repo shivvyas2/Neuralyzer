@@ -10,8 +10,10 @@ public struct JunkRule: CategoryRule {
         let logs = env.home.appending("Library/Logs")
         var items = [makeItem(logs.appending("DiagnosticReports"), root: logs, name: "Crash Reports",
                               category: id, action: .delete, preselected: true, env: env)].compactMap { $0 }
+        // Installers are junk once they have sat unopened for a month.
+        let cutoff = env.now.addingTimeInterval(-30 * 86400)
         items += childrenAsItems(of: env.home.appending("Downloads"), category: id, action: .trash,
-                                 preselected: false, env: env, include: isInstaller)
+                                 preselected: false, env: env, include: { isInstaller($0) && lastUsed($0) < cutoff })
         return items
     }
 }

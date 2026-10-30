@@ -11,9 +11,11 @@ final class ScanStore {
     var used: Int64 = 0
     var total: Int64 = 0
 
-    private let env = ScanEnvironment.live()
+    /// Rebuilt on each use so time cutoffs, like Old Files' 90 days, always count from now.
+    private var env: ScanEnvironment { .live() }
     private var polling: Task<Void, Never>?
     private var scanTask: Task<Void, Never>?
+    private var scanID = 0
 
     /// Categories with something in them, largest first.
     var categories: [CategoryResult] {
@@ -47,6 +49,8 @@ final class ScanStore {
 
     func scan() {
         scanTask?.cancel()
+        scanID += 1
+        let id = scanID
         scanning = true
         results = [:]
         selection = []
@@ -54,11 +58,12 @@ final class ScanStore {
         let env = env
         scanTask = Task { [weak self] in
             for await result in DiskScanner().scan(env) {
-                guard let self else { return }
+                guard let self, self.scanID == id else { return }
                 self.results[result.id] = result
                 self.selection.formUnion(result.items.filter(\.preselected).map(\.id))
             }
-            self?.scanning = false
+            // A newer scan owns the spinner now.
+            if self?.scanID == id { self?.scanning = false }
         }
     }
 

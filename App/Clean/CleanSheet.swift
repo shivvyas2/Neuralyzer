@@ -1,3 +1,4 @@
+import AppKit
 import NeuralyzerKit
 import SwiftUI
 
@@ -8,6 +9,7 @@ struct CleanSheet: View {
 
     @State private var working = false
     @State private var report: CleanReport?
+    @State private var blockers: [String] = []
 
     var body: some View {
         VStack(spacing: 22) {
@@ -19,11 +21,19 @@ struct CleanSheet: View {
         }
         .padding(36)
         .frame(width: 400)
+        .interactiveDismissDisabled(working)
+        .onAppear { blockers = store.blockers(for: items) }
+        // Quitting or opening Xcode, Docker, or Claude while the sheet is up updates it right away.
+        .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didLaunchApplicationNotification)) { _ in
+            blockers = store.blockers(for: items)
+        }
+        .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didTerminateApplicationNotification)) { _ in
+            blockers = store.blockers(for: items)
+        }
     }
 
     private var confirm: some View {
         let bytes = items.reduce(Int64(0)) { $0 + $1.bytes }
-        let blockers = store.blockers(for: items)
         return VStack(spacing: 22) {
             Text("Clean \(formatBytes(bytes))?").font(.system(size: 24, weight: .bold))
             if items.contains(where: { $0.action == .trash }) {
@@ -33,10 +43,13 @@ struct CleanSheet: View {
                 Text("Quit \(blockers.joined(separator: " and ")) first.").font(.system(size: 14)).foregroundStyle(.orange)
             }
             HStack(spacing: 12) {
-                Button("Cancel") { dismiss() }.buttonStyle(QuietButtonStyle()).keyboardShortcut(.cancelAction)
+                Button("Cancel") { dismiss() }.buttonStyle(QuietButtonStyle()).keyboardShortcut(.cancelAction).disabled(working)
                 Button {
                     working = true
                     Task {
+                        // Check once more right before cleaning, in case something just launched.
+                        blockers = store.blockers(for: items)
+                        guard blockers.isEmpty else { working = false; return }
                         let result = await store.clean(items)
                         working = false
                         if result.trashed > 0 || !result.failures.isEmpty { report = result } else { finish() }

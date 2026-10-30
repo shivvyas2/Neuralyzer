@@ -30,6 +30,12 @@ final class SizerTests: XCTestCase {
         XCTAssertLessThan(allocatedSize(of: home.path("a")), 1_000_000)
     }
 
+    func testHardLinksCountOnce() throws {
+        let a = home.file("store/blob", bytes: 1_000_000)
+        try FileManager.default.linkItem(at: a, to: home.path("store/copy"))
+        XCTAssertLessThan(allocatedSize(of: home.path("store")), 1_500_000)
+    }
+
     func testMissingPathIsZero() {
         XCTAssertEqual(allocatedSize(of: home.path("nope")), 0)
     }

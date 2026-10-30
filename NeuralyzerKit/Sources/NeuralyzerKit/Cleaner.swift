@@ -45,6 +45,11 @@ public actor Cleaner {
         let fm = FileManager.default
         switch item.action {
         case .simctlDeleteDevice(let udid):
+            // Removed in Xcode since the scan: nothing left to do.
+            guard fm.fileExists(atPath: item.url.path) else {
+                write("skipped", 0, item.id)
+                return
+            }
             await run(["simctl", "delete", udid], item, &report)
             return
         case .simctlDeleteRuntime(let id):
@@ -65,7 +70,7 @@ public actor Cleaner {
         do {
             switch item.action {
             case .delete:
-                try fm.removeItem(at: item.url)
+                try remove(item.url)
                 report.freed += item.bytes
                 write("delete", item.bytes, item.url.path)
             case .trash:
@@ -76,17 +81,54 @@ public actor Cleaner {
                 let cutoff = env.now.addingTimeInterval(-3600)
                 for entry in claudeSessionEntries(in: item.url, olderThan: cutoff) where !keep.contains(entry.lastPathComponent) {
                     let bytes = allocatedSize(of: entry)
-                    try fm.removeItem(at: entry)
-                    report.freed += bytes
-                    write("delete", bytes, entry.path)
+                    do {
+                        try remove(entry)
+                        report.freed += bytes
+                        write("delete", bytes, entry.path)
+                    } catch {
+                        write(Self.isMissing(error) ? "skipped" : "failed", 0, entry.path)
+                    }
                 }
             case .simctlDeleteDevice, .simctlDeleteRuntime:
                 break
             }
+        } catch where Self.isMissing(error) {
+            write("skipped", 0, item.url.path)
         } catch {
             write("failed", 0, item.url.path)
             report.failures.append(item.name)
         }
+    }
+
+    /// Removes a file or folder. Trees made read-only, like Go's module cache, are made
+    /// writable and tried once more.
+    private func remove(_ url: URL) throws {
+        do {
+            try FileManager.default.removeItem(at: url)
+        } catch where !Self.isMissing(error) {
+            makeWritable(url)
+            try FileManager.default.removeItem(at: url)
+        }
+    }
+
+    private func makeWritable(_ url: URL) {
+        let fm = FileManager.default
+        try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
+        guard let walker = fm.enumerator(at: url, includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey]) else { return }
+        for case let child as URL in walker {
+            let v = try? child.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+            if v?.isDirectory == true && v?.isSymbolicLink != true {
+                try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: child.path)
+            }
+        }
+    }
+
+    static func isMissing(_ error: Error) -> Bool {
+        let e = error as NSError
+        if e.domain == NSCocoaErrorDomain && (e.code == NSFileNoSuchFileError || e.code == NSFileReadNoSuchFileError) { return true }
+        if e.domain == NSPOSIXErrorDomain && e.code == Int(ENOENT) { return true }
+        if let underlying = e.userInfo[NSUnderlyingErrorKey] as? NSError { return isMissing(underlying) }
+        return false
     }
 
     private func run(_ args: [String], _ item: Item, _ report: inout CleanReport) async {

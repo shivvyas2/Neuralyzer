@@ -94,6 +94,7 @@ final class CleanerTests: XCTestCase {
     }
 
     func testSimctlActionsCallRunner() async {
+        home.dir("x")
         let device = Item(id: "d", category: .simulators, name: "d", url: home.path("x"), root: nil, bytes: 10,
                           action: .simctlDeleteDevice(udid: "U1"), preselected: true)
         let runtime = Item(id: "r", category: .simulators, name: "r", url: home.path("x"), root: nil, bytes: 20,
@@ -101,6 +102,47 @@ final class CleanerTests: XCTestCase {
         let report = await cleaner.clean([device, runtime])
         XCTAssertEqual(runner.calls, [["simctl", "delete", "U1"], ["simctl", "runtime", "delete", "R1"]])
         XCTAssertEqual(report.freed, 30)
+    }
+
+    func testMissingSimulatorIsSkippedNotFailed() async {
+        let device = Item(id: "d", category: .simulators, name: "d", url: home.path("gone-device"), root: nil, bytes: 10,
+                          action: .simctlDeleteDevice(udid: "U1"), preselected: true)
+        let report = await cleaner.clean([device])
+        XCTAssertTrue(runner.calls.isEmpty)
+        XCTAssertTrue(report.failures.isEmpty)
+        XCTAssertTrue(logLines()[0].contains("skipped"))
+    }
+
+    func testOneBadSessionEntryDoesNotStopTheRest() async throws {
+        let old = Date().addingTimeInterval(-7200)
+        home.file(".claude/projects/-p/a.jsonl", modified: old)
+        let locked = UUID().uuidString
+        home.file(".claude/projects/-p/\(locked)/x", modified: old)
+        home.touch(home.path(".claude/projects/-p/\(locked)"), old)
+        home.file(".claude/projects/-p/z.jsonl", modified: old)
+        try FileManager.default.setAttributes([.posixPermissions: 0o500], ofItemAtPath: home.path(".claude/projects/-p/\(locked)").path)
+        let row = item(".claude/projects/-p", root: ".claude/projects", action: .deleteContents(keep: ["memory"]))
+        _ = await cleaner.clean([row])
+        XCTAssertFalse(home.exists(".claude/projects/-p/a.jsonl"))
+        XCTAssertFalse(home.exists(".claude/projects/-p/z.jsonl"))
+    }
+
+    func testReadOnlyTreeIsStillDeleted() async throws {
+        home.file("go/pkg/mod/github.com/x/y.go")
+        for p in ["go/pkg/mod/github.com/x", "go/pkg/mod/github.com"] {
+            try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: home.path(p).path)
+        }
+        let report = await cleaner.clean([item("go/pkg/mod", root: "go/pkg")])
+        XCTAssertFalse(home.exists("go/pkg/mod"))
+        XCTAssertTrue(report.failures.isEmpty)
+    }
+
+    func testFileGoneDuringRemoveIsSkipped() async {
+        let seamCleaner = Cleaner(env: env, trash: { _ in throw CocoaError(.fileNoSuchFile) })
+        home.file("Downloads/movie.mov")
+        let report = await seamCleaner.clean([item("Downloads/movie.mov", root: "Downloads", action: .trash)])
+        XCTAssertTrue(report.failures.isEmpty)
+        XCTAssertTrue(logLines()[0].contains("skipped"))
     }
 
     func testDeleteTrashedRemovesOnlyWhatThisCleanTrashed() async {

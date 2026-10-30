@@ -42,6 +42,18 @@ final class ScannerTests: XCTestCase {
         XCTAssertEqual(runningBlockers(for: [item(.xcode)], isRunning: { _ in false }), [])
     }
 
+    private func at(_ c: CategoryID, _ path: String) -> Item {
+        Item(id: path, category: c, name: path, url: home.path(path), root: home.url, bytes: 1, action: .delete, preselected: true)
+    }
+
+    func testBlockersForDockerAndClaudeApp() {
+        let running: (String) -> Bool = { _ in true }
+        XCTAssertEqual(runningBlockers(for: [at(.vms, "Library/Containers/com.docker.docker")], isRunning: running), ["Docker"])
+        XCTAssertEqual(runningBlockers(for: [at(.vms, ".orbstack")], isRunning: running), ["OrbStack"])
+        XCTAssertEqual(runningBlockers(for: [at(.claudeCode, "Library/Application Support/Claude/Cache")], isRunning: running), ["Claude"])
+        XCTAssertEqual(runningBlockers(for: [at(.claudeCode, ".claude/shell-snapshots")], isRunning: running), [])
+    }
+
     func testFullDiskAccessProbeFailsWithoutProtectedFolders() {
         XCTAssertFalse(Access.hasFullDiskAccess(home: home.url))
     }

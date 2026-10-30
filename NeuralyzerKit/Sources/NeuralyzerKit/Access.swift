@@ -17,8 +17,17 @@ public enum Access {
 /// Apps that should be quit before cleaning these items, by display name.
 public func runningBlockers(for items: [Item], isRunning: (String) -> Bool) -> [String] {
     let categories = Set(items.map(\.category))
+    let paths = items.map(\.url.path)
+    func touches(_ fragment: String) -> Bool { paths.contains { $0.contains(fragment) } }
+
     var apps: [(name: String, bundle: String)] = []
     if categories.contains(.xcode) || categories.contains(.simulators) { apps.append(("Xcode", "com.apple.dt.Xcode")) }
     if categories.contains(.simulators) { apps.append(("Simulator", "com.apple.iphonesimulator")) }
+    if touches("/Library/Containers/com.docker.docker") { apps.append(("Docker", "com.docker.docker")) }
+    if touches("/.orbstack") { apps.append(("OrbStack", "dev.kdrag0n.MacVirt")) }
+    if touches("/Library/Containers/com.utmapp.UTM") { apps.append(("UTM", "com.utmapp.UTM")) }
+    if touches("/Library/Application Support/Claude/") || paths.contains(where: { $0.hasSuffix("/Library/Application Support/Claude") }) {
+        apps.append(("Claude", "com.anthropic.claudefordesktop"))
+    }
     return apps.filter { isRunning($0.bundle) }.map(\.name)
 }
