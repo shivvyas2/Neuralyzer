@@ -15,7 +15,7 @@ enum Theme {
     static let blue = Color(red: 0.431, green: 0.616, blue: 0.969)
     static let coral = Color(red: 0.937, green: 0.522, blue: 0.341)
     static let stone = Color(red: 0.85, green: 0.85, blue: 0.87)
-    static let ink = Color(red: 0.067, green: 0.067, blue: 0.078)
+    static let ink = Color(red: 0.122, green: 0.122, blue: 0.141)
 
     static func tint(for category: CategoryID) -> Color {
         switch category {

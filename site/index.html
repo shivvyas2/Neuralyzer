@@ -8,11 +8,11 @@
 <link rel="icon" href="icon.png">
 <style>
   :root {
-    --ink: #111114;
+    --ink: #1f1f24;
     --muted: #6b6b73;
     --faint: #a0a0a8;
-    --line: #111114;
-    --hair: rgba(17,17,20,.1);
+    --line: #1f1f24;
+    --hair: rgba(31,31,36,.1);
     --paper: #ffffff;
     --soft: #f6f6f8;
 
@@ -47,9 +47,9 @@
   .lede { font-size: 18px; line-height: 1.5; color: var(--muted); max-width: 540px; }
   .center .lede { margin-left: auto; margin-right: auto; }
 
-  .btn { display: inline-flex; align-items: center; gap: 8px; background: var(--ink); color: #fff; text-decoration: none; font-size: 15px; font-weight: 500; padding: 13px 24px; border-radius: 14px; box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 8px 20px rgba(17,17,20,.22); transition: transform .15s; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; background: var(--ink); color: #fff; text-decoration: none; font-size: 15px; font-weight: 500; padding: 13px 24px; border-radius: 14px; box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 8px 20px rgba(31,31,36,.22); transition: transform .15s; }
   .btn:hover { transform: translateY(-1px); }
-  .btn.small { font-size: 13px; padding: 9px 16px; border-radius: 11px; box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 4px 12px rgba(17,17,20,.18); }
+  .btn.small { font-size: 13px; padding: 9px 16px; border-radius: 11px; box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 4px 12px rgba(31,31,36,.18); }
   .link { color: var(--ink); font-size: 15px; font-weight: 500; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--faint); }
   .link:hover { text-decoration-color: var(--ink); }
 
@@ -77,14 +77,14 @@
     position: absolute; width: 230px; height: 262px; left: -115px;
     border: 2px solid var(--line); border-radius: 22px; background: var(--c);
     padding: 18px; display: flex; flex-direction: column; text-align: left;
-    box-shadow: 0 18px 40px rgba(17,17,20,.12);
+    box-shadow: 0 18px 40px rgba(31,31,36,.12);
     transform: translate(var(--x), var(--y)) rotate(var(--r));
     transition: transform .6s cubic-bezier(.2,.8,.2,1);
   }
   .cat .art { flex: 1; border-radius: 12px; display: grid; place-items: center; }
   .cat .art svg { width: 100%; height: 100%; }
   .cat b { display: block; font-family: var(--serif); font-weight: 400; font-size: 22px; letter-spacing: -0.02em; line-height: 1.1; margin-top: 12px; }
-  .cat span { display: block; font-size: 14px; margin-top: 3px; color: rgba(17,17,20,.7); font-variant-numeric: tabular-nums; }
+  .cat span { display: block; font-size: 14px; margin-top: 3px; color: rgba(31,31,36,.7); font-variant-numeric: tabular-nums; }
   .cat:hover { transform: translate(var(--x), calc(var(--y) - 14px)) rotate(var(--r)); z-index: 9; }
   .fan.ready .cat:nth-child(1) { --x: -420px; --y: 30px; --r: -12deg; }
   .fan.ready .cat:nth-child(2) { --x: -215px; --y: -2px; --r: -6deg; }
@@ -111,13 +111,13 @@
   /* Switcher */
   .tabs { margin: 44px auto 40px; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
   .tabs button { font: inherit; font-size: 14px; font-weight: 500; border: 1.5px solid var(--hair); background: var(--paper); padding: 9px 16px; border-radius: 12px; cursor: pointer; color: var(--muted); }
-  .tabs button:hover { color: var(--ink); border-color: rgba(17,17,20,.3); }
+  .tabs button:hover { color: var(--ink); border-color: rgba(31,31,36,.3); }
   .tabs button[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
   .panel { display: grid; grid-template-columns: 1fr 1.15fr; gap: 56px; align-items: center; }
   .panel[hidden] { display: none; }
   .panel h3 { font-size: 38px; line-height: 1.1; }
   .panel p { margin-top: 16px; font-size: 17px; line-height: 1.55; color: var(--muted); }
-  .shot { background: var(--c); border: 2px solid var(--line); border-radius: 22px; padding: 26px; box-shadow: 0 18px 40px rgba(17,17,20,.10); }
+  .shot { background: var(--c); border: 2px solid var(--line); border-radius: 22px; padding: 26px; box-shadow: 0 18px 40px rgba(31,31,36,.10); }
   .rows { display: grid; gap: 8px; }
   .row { display: flex; align-items: center; gap: 12px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 12px; padding: 11px 14px; font-size: 15px; font-weight: 500; }
   .row .chk { width: 19px; height: 19px; border-radius: 50%; border: 1.5px solid var(--line); flex: none; }
@@ -208,14 +208,14 @@
     <div class="fan" id="fan" aria-label="Categories Neuralyzer finds">
       <div class="deck">
         <div class="cat" style="--c: var(--lavender)">
-          <div class="art"><svg viewBox="0 0 190 140" fill="none" stroke="#111114" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <div class="art"><svg viewBox="0 0 190 140" fill="none" stroke="#1f1f24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="34" y="14" width="56" height="108" rx="12" fill="#fff"/><path d="M54 24h16"/><rect x="44" y="40" width="36" height="12" rx="6" fill="#6e9df7"/><rect x="44" y="60" width="36" height="12" rx="6" fill="#ffc83d"/>
             <rect x="104" y="40" width="50" height="82" rx="10" fill="#fff"/><path d="M118 50h22"/><circle cx="129" cy="86" r="13" fill="#f5a6d2"/>
           </svg></div>
           <b>Simulators</b><span>34.6 GB</span>
         </div>
         <div class="cat" style="--c: var(--yellow)">
-          <div class="art"><svg viewBox="0 0 190 140" fill="none" stroke="#111114" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <div class="art"><svg viewBox="0 0 190 140" fill="none" stroke="#1f1f24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="20" y="22" width="150" height="26" rx="7" fill="#fff"/><rect x="62" y="30" width="96" height="10" rx="3" fill="#6e9df7"/><path d="M32 35h14"/>
             <rect x="20" y="58" width="150" height="26" rx="7" fill="#fff"/><rect x="62" y="66" width="70" height="10" rx="3" fill="#6e9df7"/><circle cx="39" cy="71" r="6" fill="#ef8557"/>
             <rect x="20" y="94" width="150" height="26" rx="7" fill="#fff"/><rect x="62" y="102" width="44" height="10" rx="3" fill="#6e9df7"/><path d="M33 101l12 12M45 101l-12 12"/>
@@ -223,22 +223,22 @@
           <b>Xcode</b><span>21.1 GB</span>
         </div>
         <div class="cat" style="--c: var(--pink)">
-          <div class="art"><svg viewBox="0 0 190 140" fill="none" stroke="#111114" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="22" y="18" width="146" height="104" rx="12" fill="#111114"/><path d="M22 40h146" stroke="#fff" stroke-opacity=".25"/>
+          <div class="art"><svg viewBox="0 0 190 140" fill="none" stroke="#1f1f24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="22" y="18" width="146" height="104" rx="12" fill="#1f1f24"/><path d="M22 40h146" stroke="#fff" stroke-opacity=".25"/>
             <circle cx="36" cy="29" r="3.5" fill="#ef8557" stroke="none"/><circle cx="48" cy="29" r="3.5" fill="#ffc83d" stroke="none"/><circle cx="60" cy="29" r="3.5" fill="#3fd17f" stroke="none"/>
             <path d="M38 60l12 9-12 9" stroke="#f5a6d2"/><path d="M58 78h22" stroke="#fff"/><path d="M38 96h70" stroke="#fff" stroke-opacity=".45"/><path d="M38 108h46" stroke="#fff" stroke-opacity=".45"/>
           </svg></div>
           <b>Claude Code</b><span>4.3 GB</span>
         </div>
         <div class="cat" style="--c: var(--green)">
-          <div class="art"><svg viewBox="0 0 190 140" fill="none" stroke="#111114" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <div class="art"><svg viewBox="0 0 190 140" fill="none" stroke="#1f1f24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M95 16l48 22v50l-48 22-48-22V38z" fill="#fff"/><path d="M47 38l48 22 48-22M95 60v50"/><path d="M71 27l48 22" stroke-dasharray="5 6"/>
             <rect x="20" y="96" width="44" height="30" rx="7" fill="#ffc83d"/><rect x="128" y="98" width="44" height="28" rx="7" fill="#6e9df7"/>
           </svg></div>
           <b>Package Caches</b><span>3.4 GB</span>
         </div>
         <div class="cat" style="--c: var(--blue)">
-          <div class="art"><svg viewBox="0 0 190 140" fill="none" stroke="#111114" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <div class="art"><svg viewBox="0 0 190 140" fill="none" stroke="#1f1f24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M36 20h66l26 26v76H36z" fill="#fff"/><path d="M102 20v26h26"/>
             <path d="M50 64h62M50 78h62M50 92h40" /><rect x="116" y="70" width="52" height="52" rx="10" fill="#ffc83d"/><path d="M129 84h26M133 84l2 26h16l2-26M138 84v-5h10v5"/>
           </svg></div>

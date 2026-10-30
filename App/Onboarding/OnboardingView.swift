@@ -98,14 +98,24 @@ struct SettingsIllustration: View {
     }
 }
 
-/// The app's mark: a soft blue folder.
+/// The app's mark: three outlined cards fanned out, the same drawing as the icon.
 struct AppMark: View {
     var size: CGFloat
 
     var body: some View {
-        FolderShape(radius: size * 0.2, tabHeight: size * 0.12)
-            .fill(LinearGradient(colors: [Color(red: 0.62, green: 0.80, blue: 1.0), Color(red: 0.36, green: 0.60, blue: 0.98)],
-                                 startPoint: .top, endPoint: .bottom))
-            .frame(width: size, height: size * 0.82)
+        ZStack(alignment: .bottom) {
+            card(Theme.lavender).rotationEffect(.degrees(-16), anchor: .bottom).offset(x: -size * 0.16)
+            card(Theme.blue).rotationEffect(.degrees(16), anchor: .bottom).offset(x: size * 0.16)
+            card(Theme.yellow).offset(y: -size * 0.03)
+        }
+        .frame(width: size, height: size * 0.82)
+    }
+
+    private func card(_ color: Color) -> some View {
+        let shape = RoundedRectangle(cornerRadius: size * 0.09, style: .continuous)
+        return shape.fill(color)
+            .overlay(shape.strokeBorder(Theme.ink, lineWidth: max(1.5, size * 0.03)))
+            .frame(width: size * 0.44, height: size * 0.6)
+            .shadow(color: .black.opacity(0.12), radius: size * 0.04, y: size * 0.02)
     }
 }
