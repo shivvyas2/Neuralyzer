@@ -4,7 +4,7 @@ Neuralyzer deletes files. The rules below exist so it only ever deletes the righ
 
 ## Before you start
 
-- **Open an issue first for anything bigger than a fix.** Features start as a short design note in `docs/superpowers/specs/`.
+- **Open an issue first for anything bigger than a fix.** Say what you want to change and why.
 - **Set up as in the README.** `xcodegen generate`, then build.
 
 ## How the repo works

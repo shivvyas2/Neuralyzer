@@ -4,7 +4,7 @@
 
 ## Why
 
-<!-- Link the issue or the design note in docs/superpowers/specs/. -->
+<!-- Link the issue. -->
 
 ## How I verified it
 
