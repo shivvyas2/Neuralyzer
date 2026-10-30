@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- A Recommended card on Home: Xcode build data, package and app caches, Claude Code caches, simulators that no longer run, crash reports, and installers you already used, each with its reason. Personal files are never suggested.
+- Neuralyzer for iPhone gets the same card.
+
 ## iPhone 1.0.0
 
 - First iPhone version: duplicate photos and videos, screenshots, screen recordings, bursts, blurry photos, big videos, WhatsApp media, iCloud Drive duplicates and large files, and duplicate contacts.

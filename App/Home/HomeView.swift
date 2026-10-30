@@ -3,7 +3,7 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(ScanStore.self) private var store
-    @State private var path: [CategoryID] = []
+    @State private var path: [HomeRoute] = []
 
     private let columns = [GridItem(.adaptive(minimum: 220), spacing: 20)]
 
@@ -12,9 +12,13 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 32) {
                     header
+                    if !store.scanning && !store.recommended.isEmpty {
+                        Button { path.append(.recommended) } label: { RecommendedCard() }
+                            .buttonStyle(.plain)
+                    }
                     LazyVGrid(columns: columns, spacing: 20) {
                         ForEach(store.categories, id: \.id) { result in
-                            Button { path.append(result.id) } label: { CategoryCard(result: result) }
+                            Button { path.append(.category(result.id)) } label: { CategoryCard(result: result) }
                                 .buttonStyle(.plain)
                         }
                     }
@@ -26,7 +30,12 @@ struct HomeView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Theme.background)
-            .navigationDestination(for: CategoryID.self) { CategoryDetailView(category: $0) }
+            .navigationDestination(for: HomeRoute.self) { route in
+                switch route {
+                case .category(let id): CategoryDetailView(category: id)
+                case .recommended: RecommendedView()
+                }
+            }
             .toolbar(.hidden, for: .windowToolbar)
         }
         .onAppear { if store.results.isEmpty && !store.scanning { store.scan() } }
@@ -53,4 +62,9 @@ struct HomeView: View {
             .disabled(store.scanning)
         }
     }
+}
+
+enum HomeRoute: Hashable {
+    case category(CategoryID)
+    case recommended
 }

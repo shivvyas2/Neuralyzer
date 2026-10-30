@@ -67,6 +67,13 @@ final class ScanStore {
         }
     }
 
+    /// What Neuralyzer suggests cleaning, largest first.
+    var recommended: [Recommendation] { recommendations(categories) }
+
+    func selectAllRecommended() {
+        selection.formUnion(recommended.flatMap(\.items).map(\.id))
+    }
+
     func items(in category: CategoryID) -> [Item] {
         results[category]?.items ?? []
     }
