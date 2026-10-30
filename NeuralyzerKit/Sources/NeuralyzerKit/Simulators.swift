@@ -25,7 +25,11 @@ public struct SimulatorRule: CategoryRule {
     }
 
     public func scan(_ env: ScanEnvironment) async -> [Item] {
-        await devices(env) + runtimes(env)
+        // Without this folder there are no simulators, and calling xcrun on a Mac without
+        // developer tools would pop up Apple's install dialog.
+        let core = env.home.appendingPathComponent("Library/Developer/CoreSimulator")
+        guard FileManager.default.fileExists(atPath: core.path) else { return [] }
+        return await devices(env) + runtimes(env)
     }
 
     private func devices(_ env: ScanEnvironment) async -> [Item] {

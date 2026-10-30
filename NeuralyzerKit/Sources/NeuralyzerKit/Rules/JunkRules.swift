@@ -54,6 +54,16 @@ public struct ProjectBuildRule: CategoryRule {
 
     static let names: Set<String> = ["node_modules", ".build", ".next", "build", "DerivedData"]
     static let maxDepth = 6
+    /// A folder named `build` is only offered when one of these sits beside it, since
+    /// plenty of projects keep committed files in `build`.
+    static let buildSystemFiles = ["package.json", "build.gradle", "build.gradle.kts", "CMakeLists.txt", "Package.swift", "pubspec.yaml"]
+
+    static func isGeneratedBuild(_ url: URL) -> Bool {
+        let parent = url.deletingLastPathComponent()
+        let fm = FileManager.default
+        if buildSystemFiles.contains(where: { fm.fileExists(atPath: parent.appendingPathComponent($0).path) }) { return true }
+        return children(of: parent).contains { $0.pathExtension == "xcodeproj" }
+    }
 
     public func scan(_ env: ScanEnvironment) async -> [Item] { find(env) }
 
@@ -70,8 +80,11 @@ public struct ProjectBuildRule: CategoryRule {
             let name = url.lastPathComponent
             if Self.names.contains(name) {
                 walker.skipDescendants()
+                if name == "build" && !Self.isGeneratedBuild(url) { continue }
                 let relative = String(url.resolvingSymlinksInPath().path.dropFirst(projects.path.count + 1))
-                if let item = makeItem(url, root: projects, name: relative, category: id, action: .delete,
+                // A `build` folder can still hold something hand made, so it goes to the Trash.
+                let action: Action = name == "build" ? .trash : .delete
+                if let item = makeItem(url, root: projects, name: relative, category: id, action: action,
                                        preselected: false, env: env) { items.append(item) }
             } else if name == ".git" || walker.level >= Self.maxDepth {
                 walker.skipDescendants()

@@ -12,7 +12,7 @@ A plain Mac app that finds what is filling your disk and cleans it. Built for a 
 | Simulators | Devices and runtimes, through `xcrun simctl` | Removed by `simctl` |
 | Claude Code | Old session logs, shell snapshots, telemetry, Claude app caches | Deleted. Memory, settings, skills, and plugins are never touched. |
 | Package Caches | npm, pnpm, Yarn, Bun, pip, Homebrew, CocoaPods, Gradle, Cargo, Go, SwiftPM, `~/.cache` | Deleted |
-| Build Folders | `node_modules`, `.build`, `.next`, `build`, `DerivedData` inside `~/Projects` | Deleted |
+| Build Folders | `node_modules`, `.build`, `.next`, `DerivedData`, and `build` next to a build file, inside `~/Projects` | Deleted. `build` goes to the Trash. |
 | VMs | Docker, UTM, Parallels, VMware Fusion, OrbStack, Tart, Ollama models | Trash |
 | App Caches | `~/Library/Caches` and `~/Library/Logs` | Deleted |
 | Junk | Crash reports, installers in Downloads | Reports deleted, installers to the Trash |

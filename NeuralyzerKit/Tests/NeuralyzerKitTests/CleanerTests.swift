@@ -16,9 +16,11 @@ final class CleanerTests: XCTestCase {
     let home = FakeHome()
     let runner = RecordingRunner()
     lazy var env = ScanEnvironment(home: home.url, runner: runner)
-    lazy var trashed = home.dir("TrashSeam")
+    lazy var trashed = home.dir(".Trash")
     lazy var cleaner = Cleaner(env: env, trash: { [trashed] url in
-        try FileManager.default.moveItem(at: url, to: trashed.appendingPathComponent(url.lastPathComponent))
+        let dest = trashed.appendingPathComponent(url.lastPathComponent)
+        try FileManager.default.moveItem(at: url, to: dest)
+        return dest
     })
 
     private func item(_ path: String, root: String, action: Action = .delete) -> Item {
@@ -43,7 +45,7 @@ final class CleanerTests: XCTestCase {
         home.file("Downloads/movie.mov")
         let report = await cleaner.clean([item("Downloads/movie.mov", root: "Downloads", action: .trash)])
         XCTAssertFalse(home.exists("Downloads/movie.mov"))
-        XCTAssertTrue(home.exists("TrashSeam/movie.mov"))
+        XCTAssertTrue(home.exists(".Trash/movie.mov"))
         XCTAssertEqual(report.trashed, 4096)
         XCTAssertEqual(report.freed, 0)
     }
@@ -101,10 +103,21 @@ final class CleanerTests: XCTestCase {
         XCTAssertEqual(report.freed, 30)
     }
 
-    func testEmptyTrashRemovesTrashContents() async {
-        home.file(".Trash/a.zip", bytes: 8192)
-        let freed = await cleaner.emptyTrash()
-        XCTAssertFalse(home.exists(".Trash/a.zip"))
+    func testDeleteTrashedRemovesOnlyWhatThisCleanTrashed() async {
+        _ = trashed
+        home.file(".Trash/kept-by-hand.zip", bytes: 8192)
+        home.file("Downloads/movie.mov", bytes: 8192)
+        let report = await cleaner.clean([item("Downloads/movie.mov", root: "Downloads", action: .trash)])
+        XCTAssertEqual(report.trashedURLs.map(\.lastPathComponent), ["movie.mov"])
+        let freed = await cleaner.deleteTrashed(report.trashedURLs)
+        XCTAssertFalse(home.exists(".Trash/movie.mov"))
+        XCTAssertTrue(home.exists(".Trash/kept-by-hand.zip"))
         XCTAssertGreaterThanOrEqual(freed, 8192)
+    }
+
+    func testDeleteTrashedRefusesPathsOutsideTrash() async {
+        let outside = home.file("Documents/thesis.pdf")
+        _ = await cleaner.deleteTrashed([outside])
+        XCTAssertTrue(home.exists("Documents/thesis.pdf"))
     }
 }

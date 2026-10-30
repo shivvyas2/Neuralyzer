@@ -86,9 +86,9 @@ final class ScanStore {
         return report
     }
 
-    func emptyTrash() async {
-        _ = await Cleaner(env: env).emptyTrash()
-        results[.trash] = nil
+    /// Deletes for good only what this clean just moved to the Trash.
+    func deleteTrashed(_ report: CleanReport) async {
+        _ = await Cleaner(env: env).deleteTrashed(report.trashedURLs)
         refreshSpace()
     }
 

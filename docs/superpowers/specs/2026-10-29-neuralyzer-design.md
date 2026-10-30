@@ -77,7 +77,7 @@ Admin rights are not requested up front. Operations that need them (removing sim
 
 ### 4. Clean confirmation
 
-A single sheet: "Clean 8.6 GB?" and two buttons. If the selection includes Trash-bound items, the sheet says once that those go to the Trash, and after the clean a second button "Empty Trash" is offered so that space actually frees (builder's call). The Trash card shows what is sitting in the Trash. After cleaning, the card sizes update and the header shows the new free space.
+A single sheet: "Clean 8.6 GB?" and two buttons. If the selection includes Trash-bound items, the sheet says once that those go to the Trash, and after the clean a second button "Delete for Good" removes only the items this clean just trashed, so space frees without touching anything else in the Trash (changed after review). The Trash card shows what is sitting in the Trash. After cleaning, the card sizes update and the header shows the new free space.
 
 ## Categories and what they contain
 
@@ -89,7 +89,7 @@ Each category has a kind: **rebuildable** (deleted permanently, preselected) or 
 | Simulators | Devices via `xcrun simctl list devices -j` (each device a row, unavailable devices preselected), runtimes via `xcrun simctl runtime list -j` (each runtime a row) | rebuildable; runtimes and devices are not preselected, unavailable devices are |
 | Claude Code | `~/.claude/projects` session logs (only `*.jsonl` files and session-UUID folders inside each project folder; each project is a row summing those; the `memory` folder inside each project is never touched; sessions modified in the last hour are skipped so running sessions survive), `~/.claude/shell-snapshots`, `~/.claude/todos`, `~/.claude/statsig`, plugin caches under `~/.claude/plugins/cache`, Claude app caches under `~/Library/Application Support/Claude` (Cache, Code Cache, GPUCache, logs) | rebuildable, but session logs are not preselected. Never touch `~/.claude/settings*.json`, `CLAUDE.md`, `memory`, `skills`, `agents`, `commands`, credentials. |
 | Package caches | npm (`~/.npm/_cacache`), pnpm store, Yarn, Bun, pip, Homebrew cache, CocoaPods cache, Gradle caches, Cargo registry, Go module cache, SwiftPM caches | rebuildable |
-| Project build folders | `node_modules`, `.build`, `.next`, `build`, `DerivedData` inside `~/Projects` only for v1 (builder's call; no settings screen) | rebuildable, not preselected |
+| Project build folders | `node_modules`, `.build`, `.next`, `DerivedData`, and `build` only beside a build file (package.json, build.gradle, CMakeLists.txt, Package.swift, pubspec.yaml, .xcodeproj), which goes to the Trash inside `~/Projects` only for v1 (builder's call; no settings screen) | rebuildable, not preselected |
 | VMs and containers | Docker data, UTM, Parallels, VMware Fusion, OrbStack, Tart, Ollama models | personal |
 | App caches | `~/Library/Caches` per app (each app a row), `~/Library/Logs` | rebuildable |
 | Junk | Crash reports under `~/Library/Logs/DiagnosticReports`, old installer `.dmg` and `.pkg` files in Downloads | rebuildable for logs and reports; installers personal |

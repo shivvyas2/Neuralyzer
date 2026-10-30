@@ -50,7 +50,15 @@ final class SimulatorsTests: XCTestCase {
                        .simctlDeleteRuntime(id: "2C7C6B59-8E74-49D0-AF03-53AFD13FBBB3"))
     }
 
+    func testSkipsSimctlWhenNoSimulatorFolder() async {
+        let runner = RecordingRunner()
+        let items = await SimulatorRule().scan(ScanEnvironment(home: home.url, runner: runner))
+        XCTAssertTrue(items.isEmpty)
+        XCTAssertTrue(runner.calls.isEmpty)
+    }
+
     func testMissingSimctlYieldsNoItems() async {
+        home.dir("Library/Developer/CoreSimulator")
         let items = await SimulatorRule().scan(ScanEnvironment(home: home.url, runner: StubRunner(fail: true)))
         XCTAssertTrue(items.isEmpty)
     }

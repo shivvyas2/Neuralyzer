@@ -5,6 +5,8 @@ public struct CleanReport: Sendable {
     public var freed: Int64 = 0
     /// Bytes moved to the Trash, which free up only once the Trash is emptied.
     public var trashed: Int64 = 0
+    /// Where trashed items ended up, so they alone can be deleted for good.
+    public var trashedURLs: [URL] = []
     /// Items that could not be cleaned.
     public var failures: [String] = []
 }
@@ -13,13 +15,17 @@ public struct CleanReport: Sendable {
 public actor Cleaner {
     let env: ScanEnvironment
     let log: URL
-    let trash: @Sendable (URL) throws -> Void
+    let trash: @Sendable (URL) throws -> URL?
     let guardian: SafetyGuard
 
     public init(
         env: ScanEnvironment,
         log: URL? = nil,
-        trash: @escaping @Sendable (URL) throws -> Void = { try FileManager.default.trashItem(at: $0, resultingItemURL: nil) }
+        trash: @escaping @Sendable (URL) throws -> URL? = { url in
+            var result: NSURL?
+            try FileManager.default.trashItem(at: url, resultingItemURL: &result)
+            return result as URL?
+        }
     ) {
         self.env = env
         self.log = log ?? env.home.appendingPathComponent("Library/Logs/Neuralyzer/clean.log")
@@ -63,7 +69,7 @@ public actor Cleaner {
                 report.freed += item.bytes
                 write("delete", item.bytes, item.url.path)
             case .trash:
-                try trash(item.url)
+                if let landed = try trash(item.url) { report.trashedURLs.append(landed) }
                 report.trashed += item.bytes
                 write("trash", item.bytes, item.url.path)
             case .deleteContents(let keep):
@@ -94,11 +100,12 @@ public actor Cleaner {
         }
     }
 
-    /// Permanently removes everything in the Trash. Returns the bytes freed.
-    public func emptyTrash() async -> Int64 {
+    /// Permanently removes items an earlier clean moved to the Trash, and nothing else
+    /// that is in the Trash. Returns the bytes freed.
+    public func deleteTrashed(_ urls: [URL]) async -> Int64 {
         let trashFolder = env.home.appendingPathComponent(".Trash")
         var freed: Int64 = 0
-        for entry in children(of: trashFolder) where guardian.allows(entry, root: trashFolder) {
+        for entry in urls where guardian.allows(entry, root: trashFolder) {
             let bytes = allocatedSize(of: entry)
             if (try? FileManager.default.removeItem(at: entry)) != nil {
                 freed += bytes

@@ -132,6 +132,23 @@ final class RuleTests: XCTestCase {
         XCTAssertEqual(names, ["ios/Kit/.build", "web/app/node_modules"])
     }
 
+    func testBuildFolderNeedsBuildSystemBesideIt() async {
+        home.file("Projects/electron/build/icon.icns")
+        home.file("Projects/gradle/build/out.jar")
+        home.file("Projects/gradle/build.gradle")
+        let items = await scan(ProjectBuildRule())
+        XCTAssertEqual(items.map(\.name), ["gradle/build"])
+    }
+
+    func testBuildFolderGoesToTrash() async {
+        home.file("Projects/web/build/app.js")
+        home.file("Projects/web/package.json")
+        home.file("Projects/web/node_modules/x/y.js")
+        let items = await scan(ProjectBuildRule())
+        XCTAssertEqual(items.first { $0.name == "web/build" }?.action, .trash)
+        XCTAssertEqual(items.first { $0.name == "web/node_modules" }?.action, .delete)
+    }
+
     func testEveryRowPassesSafetyGuard() async {
         home.file("Library/Caches/com.example.app/z")
         home.link("Library/Caches/evil", to: "Documents")

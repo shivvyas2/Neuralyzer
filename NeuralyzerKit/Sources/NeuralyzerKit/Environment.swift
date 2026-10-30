@@ -8,12 +8,16 @@ public struct CommandFailed: Error, Sendable {
     public let status: Int32
 }
 
-/// Runs a command and returns its standard output.
+/// Runs a command and returns its standard output. A command still running after
+/// `timeout` seconds is stopped and treated as failed, so a stuck tool cannot stall a scan.
 public struct ProcessRunner: CommandRunner {
-    public init() {}
+    let timeout: TimeInterval
+
+    public init(timeout: TimeInterval = 60) { self.timeout = timeout }
 
     public func run(_ launchPath: String, _ args: [String]) async throws -> Data {
-        try await Task.detached {
+        let timeout = timeout
+        return try await Task.detached {
             let p = Process()
             p.executableURL = URL(fileURLWithPath: launchPath)
             p.arguments = args
@@ -21,6 +25,9 @@ public struct ProcessRunner: CommandRunner {
             p.standardOutput = out
             p.standardError = FileHandle.nullDevice
             try p.run()
+            let watchdog = DispatchWorkItem { if p.isRunning { p.terminate() } }
+            DispatchQueue.global().asyncAfter(deadline: .now() + timeout, execute: watchdog)
+            defer { watchdog.cancel() }
             // Read before waiting so a large output cannot fill the pipe and stall the process.
             let data = out.fileHandleForReading.readDataToEndOfFile()
             p.waitUntilExit()

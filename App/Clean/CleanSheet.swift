@@ -64,11 +64,11 @@ struct CleanSheet: View {
                     Button {
                         working = true
                         Task {
-                            await store.emptyTrash()
+                            await store.deleteTrashed(report)
                             finish()
                         }
                     } label: {
-                        if working { ProgressView().controlSize(.small).frame(width: 80) } else { Text("Empty Trash") }
+                        if working { ProgressView().controlSize(.small).frame(width: 80) } else { Text("Delete for Good") }
                     }
                     .buttonStyle(PillButtonStyle())
                     .disabled(working)
