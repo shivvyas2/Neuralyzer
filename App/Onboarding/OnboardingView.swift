@@ -96,20 +96,14 @@ struct SettingsIllustration: View {
     }
 }
 
-/// The app's mark: a soft folder with a spark of light.
+/// The app's mark: a soft blue folder.
 struct AppMark: View {
     var size: CGFloat
 
     var body: some View {
-        ZStack {
-            FolderShape(radius: size * 0.2, tabHeight: size * 0.12)
-                .fill(LinearGradient(colors: [Color(red: 0.62, green: 0.80, blue: 1.0), Color(red: 0.36, green: 0.60, blue: 0.98)],
-                                     startPoint: .top, endPoint: .bottom))
-            Image(systemName: "sparkle")
-                .font(.system(size: size * 0.36, weight: .semibold))
-                .foregroundStyle(.white)
-                .offset(y: size * 0.06)
-        }
-        .frame(width: size, height: size * 0.82)
+        FolderShape(radius: size * 0.2, tabHeight: size * 0.12)
+            .fill(LinearGradient(colors: [Color(red: 0.62, green: 0.80, blue: 1.0), Color(red: 0.36, green: 0.60, blue: 0.98)],
+                                 startPoint: .top, endPoint: .bottom))
+            .frame(width: size, height: size * 0.82)
     }
 }

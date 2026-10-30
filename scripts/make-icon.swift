@@ -1,4 +1,4 @@
-// Draws the app icon at 1024 px. Run: swift scripts/make-icon.swift out.png
+// Draws the app icon, a soft blue folder, at 1024 px. Run: swift scripts/make-icon.swift out.png
 import AppKit
 
 let size: CGFloat = 1024
@@ -20,12 +20,6 @@ let front = NSBezierPath(roundedRect: NSRect(x: 230, y: 270, width: 564, height:
 NSGradient(colors: [NSColor(red: 0.64, green: 0.81, blue: 1.0, alpha: 1), NSColor(red: 0.42, green: 0.64, blue: 0.99, alpha: 1)])!
     .draw(in: front, angle: -90)
 
-// Spark.
-let config = NSImage.SymbolConfiguration(pointSize: 230, weight: .semibold).applying(.init(paletteColors: [.white]))
-if let spark = NSImage(systemSymbolName: "sparkle", accessibilityDescription: nil)?.withSymbolConfiguration(config) {
-    let s = spark.size
-    spark.draw(in: NSRect(x: 512 - s.width / 2, y: 460 - s.height / 2, width: s.width, height: s.height))
-}
 _ = ctx
 image.unlockFocus()
 
