@@ -35,7 +35,7 @@ struct HomeView: View {
     private var header: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Neuralyzer").font(.system(size: 34, weight: .bold))
+                Text("Neuralyzer").font(Theme.title(40))
                 Text("\(formatBytes(store.used)) used of \(formatBytes(store.total))")
                     .font(.system(size: 15))
                     .foregroundStyle(.secondary)

@@ -26,7 +26,7 @@ struct OnboardingView: View {
     private var welcome: some View {
         VStack(spacing: 28) {
             AppMark(size: 96)
-            Text("Neuralyzer").font(.system(size: 44, weight: .bold))
+            Text("Neuralyzer").font(Theme.title(52))
             Button("Continue") { withAnimation { step = 1 } }
                 .buttonStyle(PillButtonStyle())
         }
@@ -34,7 +34,7 @@ struct OnboardingView: View {
 
     private var access: some View {
         VStack(spacing: 28) {
-            Text("Allow Full Disk Access").font(.system(size: 34, weight: .bold))
+            Text("Allow Full Disk Access").font(Theme.title(40))
             SettingsIllustration()
             Text("Turn on Neuralyzer in the list. If it is missing, press + and add it.")
                 .font(.system(size: 15))
@@ -49,8 +49,8 @@ struct OnboardingView: View {
         VStack(spacing: 28) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 72))
-                .foregroundStyle(.green)
-            Text("All set").font(.system(size: 44, weight: .bold))
+                .foregroundStyle(Theme.green)
+            Text("All set").font(Theme.title(52))
             Button("Start Scan") {
                 onboarded = true
                 store.scan()
@@ -74,8 +74,10 @@ struct SettingsIllustration: View {
             row(icon: "safari", name: "Safari", on: false)
         }
         .frame(width: 420)
-        .surface()
-        .shadow(color: .black.opacity(0.06), radius: 20, y: 8)
+        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color("Surface")))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(.primary.opacity(0.85), lineWidth: 2))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .shadow(color: .black.opacity(0.08), radius: 20, y: 8)
     }
 
     private func row(icon: String = "", app: Bool = false, name: String, on: Bool = false,
@@ -92,7 +94,7 @@ struct SettingsIllustration: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(highlight ? Color.accentColor.opacity(0.10) : .clear)
+        .background(highlight ? Theme.yellow.opacity(0.45) : .clear)
     }
 }
 

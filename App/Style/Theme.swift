@@ -7,21 +7,33 @@ enum Theme {
         startPoint: .top, endPoint: .bottom
     )
 
+    /// Bold flat colors, one per kind of clutter. Text and outlines on them are always ink.
+    static let lavender = Color(red: 0.776, green: 0.714, blue: 1.0)
+    static let yellow = Color(red: 1.0, green: 0.784, blue: 0.239)
+    static let pink = Color(red: 0.961, green: 0.651, blue: 0.824)
+    static let green = Color(red: 0.247, green: 0.82, blue: 0.498)
+    static let blue = Color(red: 0.431, green: 0.616, blue: 0.969)
+    static let coral = Color(red: 0.937, green: 0.522, blue: 0.341)
+    static let stone = Color(red: 0.85, green: 0.85, blue: 0.87)
+    static let ink = Color(red: 0.067, green: 0.067, blue: 0.078)
+
     static func tint(for category: CategoryID) -> Color {
         switch category {
-        case .xcode: Color(red: 0.55, green: 0.72, blue: 0.98)
-        case .simulators: Color(red: 0.70, green: 0.66, blue: 0.96)
-        case .claudeCode: Color(red: 0.98, green: 0.74, blue: 0.58)
-        case .packageCaches: Color(red: 0.60, green: 0.85, blue: 0.78)
-        case .projectBuilds: Color(red: 0.62, green: 0.80, blue: 0.95)
-        case .vms: Color(red: 0.78, green: 0.74, blue: 0.90)
-        case .appCaches: Color(red: 0.95, green: 0.80, blue: 0.62)
-        case .junk: Color(red: 0.92, green: 0.70, blue: 0.74)
-        case .trash: Color(red: 0.75, green: 0.78, blue: 0.82)
-        case .largeFiles: Color(red: 0.66, green: 0.82, blue: 0.70)
-        case .oldFiles: Color(red: 0.88, green: 0.82, blue: 0.62)
+        case .xcode: yellow
+        case .simulators: lavender
+        case .claudeCode: pink
+        case .packageCaches: green
+        case .projectBuilds: blue
+        case .vms: lavender
+        case .appCaches: coral
+        case .junk: pink
+        case .trash: stone
+        case .largeFiles: blue
+        case .oldFiles: yellow
         }
     }
+
+    static func title(_ size: CGFloat) -> Font { .system(size: size, weight: .regular, design: .serif) }
 }
 
 /// A card shaped like a folder: a short tab on the top left above a rounded body.
@@ -57,8 +69,8 @@ struct FolderShape: Shape {
 struct Surface: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color("Surface")))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(.primary.opacity(0.06)))
+            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color("Surface")))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(.primary.opacity(0.85), lineWidth: 1.5))
     }
 }
 
@@ -76,7 +88,8 @@ struct PillButtonStyle: ButtonStyle {
             .foregroundStyle(Color("PillText"))
             .padding(.horizontal, 22)
             .padding(.vertical, 11)
-            .background(Capsule().fill(Color("Pill")))
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color("Pill")))
+            .shadow(color: .black.opacity(0.18), radius: 8, y: 4)
             .opacity(enabled ? (configuration.isPressed ? 0.8 : 1) : 0.35)
     }
 }
@@ -89,8 +102,8 @@ struct QuietButtonStyle: ButtonStyle {
             .foregroundStyle(.primary)
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
-            .background(Capsule().fill(Color("Surface")))
-            .overlay(Capsule().strokeBorder(.primary.opacity(0.12)))
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color("Surface")))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(.primary.opacity(0.15), lineWidth: 1.5))
             .opacity(configuration.isPressed ? 0.7 : 1)
     }
 }

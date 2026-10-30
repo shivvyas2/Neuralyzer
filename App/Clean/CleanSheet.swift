@@ -35,7 +35,7 @@ struct CleanSheet: View {
     private var confirm: some View {
         let bytes = items.reduce(Int64(0)) { $0 + $1.bytes }
         return VStack(spacing: 22) {
-            Text("Clean \(formatBytes(bytes))?").font(.system(size: 24, weight: .bold))
+            Text("Clean \(formatBytes(bytes))?").font(Theme.title(28))
             if items.contains(where: { $0.action == .trash }) {
                 Text("Some items go to the Trash.").font(.system(size: 14)).foregroundStyle(.secondary)
             }
@@ -67,7 +67,7 @@ struct CleanSheet: View {
     private func finished(_ report: CleanReport) -> some View {
         VStack(spacing: 22) {
             Text(report.failures.isEmpty ? "Done" : "Could not clean \(report.failures.count)")
-                .font(.system(size: 24, weight: .bold))
+                .font(Theme.title(28))
             if report.trashed > 0 {
                 Text("\(formatBytes(report.trashed)) is in the Trash.").font(.system(size: 14)).foregroundStyle(.secondary)
             }

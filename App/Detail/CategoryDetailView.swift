@@ -17,10 +17,11 @@ struct CategoryDetailView: View {
                     Image(systemName: "chevron.left").font(.system(size: 15, weight: .semibold)).frame(width: 36, height: 36)
                 }
                 .buttonStyle(.plain)
-                .background(Circle().fill(Color("Surface")))
-                .overlay(Circle().strokeBorder(.primary.opacity(0.08)))
+                .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Theme.tint(for: category)))
+                .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Theme.ink, lineWidth: 1.5))
+                .foregroundStyle(Theme.ink)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(category.title).font(.system(size: 30, weight: .bold))
+                    Text(category.title).font(Theme.title(34))
                     Text(formatBytes(items.reduce(0) { $0 + $1.bytes }))
                         .font(.system(size: 15)).foregroundStyle(.secondary)
                 }

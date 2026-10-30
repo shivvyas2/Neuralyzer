@@ -1,39 +1,37 @@
 import NeuralyzerKit
 import SwiftUI
 
+/// A bold flat card with an ink outline, like a sticker: icon tile on top, name and size below.
 struct CategoryCard: View {
     let result: CategoryResult
     @State private var hovering = false
 
     var body: some View {
-        let tint = Theme.tint(for: result.id)
         VStack(alignment: .leading, spacing: 0) {
             Image(systemName: result.id.symbol)
-                .font(.system(size: 22, weight: .medium))
-                .foregroundStyle(tint.mix(with: .black, by: 0.45))
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(Theme.ink)
                 .frame(width: 46, height: 46)
-                .background(Circle().fill(.white.opacity(0.7)))
+                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.white))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.ink, lineWidth: 1.5))
             Spacer(minLength: 28)
             Text(result.id.title)
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(.primary)
+                .font(Theme.title(22))
+                .foregroundStyle(Theme.ink)
             Text(formatBytes(result.bytes))
-                .font(.system(size: 15))
-                .foregroundStyle(.secondary)
-                .padding(.top, 4)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(Theme.ink.opacity(0.7))
+                .monospacedDigit()
+                .padding(.top, 2)
         }
-        .padding(.horizontal, 22)
-        .padding(.top, 34)
-        .padding(.bottom, 22)
-        .frame(maxWidth: .infinity, minHeight: 170, alignment: .leading)
-        .background(
-            FolderShape()
-                .fill(LinearGradient(colors: [tint.opacity(0.55), tint.opacity(0.28)], startPoint: .top, endPoint: .bottom))
-        )
-        .overlay(FolderShape().stroke(.white.opacity(0.6), lineWidth: 1))
-        .contentShape(FolderShape())
-        .scaleEffect(hovering ? 1.015 : 1)
-        .shadow(color: .black.opacity(hovering ? 0.08 : 0.04), radius: hovering ? 18 : 10, y: 6)
+        .padding(20)
+        .frame(maxWidth: .infinity, minHeight: 176, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(Theme.tint(for: result.id)))
+        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Theme.ink, lineWidth: 2))
+        .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .rotationEffect(.degrees(hovering ? -1.5 : 0))
+        .offset(y: hovering ? -4 : 0)
+        .shadow(color: .black.opacity(hovering ? 0.16 : 0.08), radius: hovering ? 18 : 10, y: 8)
         .animation(.smooth(duration: 0.2), value: hovering)
         .onHover { hovering = $0 }
     }

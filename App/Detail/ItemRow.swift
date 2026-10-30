@@ -15,9 +15,10 @@ struct ItemRow: View {
                     .foregroundStyle(selected ? Color.primary : Color.secondary.opacity(0.5))
                 Image(systemName: symbol)
                     .font(.system(size: 16))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.ink)
                     .frame(width: 38, height: 38)
-                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(.primary.opacity(0.05)))
+                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(tint))
+                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.ink, lineWidth: 1.5))
                 Text(item.name)
                     .font(.system(size: 15, weight: .medium))
                     .lineLimit(1)
@@ -40,6 +41,8 @@ struct ItemRow: View {
             }
         }
     }
+
+    private var tint: Color { Theme.tint(for: item.category) }
 
     private var symbol: String {
         switch item.action {
