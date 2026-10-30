@@ -30,6 +30,9 @@ struct ContactListView: View {
                 .overlay(shape.strokeBorder(Theme.ink, lineWidth: 1.5))
                 .contentShape(shape)
                 .onTapGesture { if group.sameContainer { store.toggle(group.keep.id) } }
+                .accessibilityElement(children: .combine)
+                .accessibilityAddTraits(group.sameContainer ? [.isButton] : [])
+                .accessibilityAddTraits(selected ? [.isSelected] : [])
                 .opacity(group.sameContainer ? 1 : 0.6)
             }
         }

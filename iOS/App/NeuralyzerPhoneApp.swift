@@ -4,6 +4,7 @@ import SwiftUI
 struct NeuralyzerPhoneApp: App {
     @State private var store = PhoneStore()
     @AppStorage("onboarded") private var onboarded = false
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
@@ -17,6 +18,7 @@ struct NeuralyzerPhoneApp: App {
             .environment(store)
             .preferredColorScheme(.light)
             .tint(Theme.ink)
+            .onChange(of: scenePhase) { _, phase in if phase == .active && onboarded { store.refreshAccess() } }
         }
     }
 }

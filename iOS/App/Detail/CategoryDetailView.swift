@@ -29,10 +29,10 @@ struct CategoryDetailView: View {
         }
         .onChange(of: content.isEmpty) { _, empty in if empty { dismiss() } }
         .confirmationDialog("Move \(selectedFiles(content)) files to the Trash?", isPresented: $confirmFiles, titleVisibility: .visible) {
-            Button("Move to Trash", role: .destructive) { _ = store.trashFiles(in: category) }
+            Button("Move to Trash", role: .destructive) { Task { _ = await store.trashFiles(in: category) } }
         }
         .confirmationDialog("Merge and delete \(deletedContacts(content)) contacts?", isPresented: $confirmContacts, titleVisibility: .visible) {
-            Button("Merge") { _ = store.mergeContacts() }
+            Button("Merge") { Task { _ = await store.mergeContacts() } }
         } message: {
             Text("Their details move into the contact that stays. A backup is saved in Files, in the Neuralyzer folder.")
         }

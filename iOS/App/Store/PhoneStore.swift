@@ -56,6 +56,15 @@ final class PhoneStore {
         contactsAccess = CNContactStore.authorizationStatus(for: .contacts)
     }
 
+    /// Re-reads access after a trip to Settings, and scans if Photos just became available.
+    func refreshAccess() {
+        let before = photosAccess
+        photosAccess = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        contactsAccess = CNContactStore.authorizationStatus(for: .contacts)
+        let usable: (PHAuthorizationStatus) -> Bool = { $0 == .authorized || $0 == .limited }
+        if usable(photosAccess) && !usable(before) { scan() }
+    }
+
     func folderPicked(_ url: URL) {
         FolderAccess.save(url)
         hasFolder = FolderAccess.hasFolder
@@ -74,13 +83,15 @@ final class PhoneStore {
             let found = await Task.detached(priority: .userInitiated) { () -> [PhoneCategory: CategoryContent] in
                 var out: [PhoneCategory: CategoryContent] = [:]
                 if canPhotos {
-                    let all = scanner.scan { p in Task { @MainActor in self.progress = p * 0.8 } }
+                    let all = scanner.scan { p in Task { @MainActor in self.progress = p * 0.6 } }
                     let exact = exactDuplicateGroups(all, confirm: { a, b in (scanner.distance(a, b) ?? 1) < 0.05 })
                     let inExact = Set(exact.flatMap { [$0.keep.id] + $0.others.map(\.id) })
-                    let near = nearDuplicateGroups(all, excluding: inExact, distance: scanner.distance, threshold: 0.35)
+                    let near = nearDuplicateGroups(all, excluding: inExact, distance: scanner.distance, threshold: 0.35,
+                                                   progress: { p in Task { @MainActor in self.progress = 0.6 + p * 0.3 } })
                     out[.duplicates] = CategoryContent(photoGroups: exact + near)
                     for (category, list) in classify(all) { out[category] = CategoryContent(photos: list) }
                 }
+                Task { @MainActor in self.progress = 0.9 }
                 if let files = FolderAccess.withFolder({ listFiles(in: $0) }) {
                     let groups = duplicateFileGroups(files, hash: sha256)
                     out[.icloudDuplicates] = CategoryContent(fileGroups: groups)
@@ -139,41 +150,51 @@ final class PhoneStore {
         }
     }
 
-    /// Moves the selected iCloud Drive files to the Trash, coordinated with iCloud.
-    func trashFiles(in category: PhoneCategory) -> Int {
+    /// Moves the selected iCloud Drive files to the Trash, coordinated with iCloud, off the main thread.
+    func trashFiles(in category: PhoneCategory) async -> Int {
         guard let content = results[category] else { return 0 }
         let items = (content.files + content.fileGroups.flatMap(\.others)).filter { selection.contains($0.id) }
+        let removed = await Task.detached { Self.trash(items) }.value
+        freedThisSession += items.filter { removed.contains($0.id) }.reduce(0) { $0 + $1.bytes }
+        removeEverywhere(removed)
+        return removed.count
+    }
+
+    nonisolated private static func trash(_ items: [FileInfo]) -> Set<String> {
         var removed = Set<String>()
         _ = FolderAccess.withFolder { _ in
             let coordinator = NSFileCoordinator()
             for file in items {
                 var error: NSError?
                 coordinator.coordinate(writingItemAt: file.url, options: .forDeleting, error: &error) { url in
-                    if (try? FileManager.default.trashItem(at: url, resultingItemURL: nil)) != nil {
-                        removed.insert(file.id)
-                        freedThisSession += file.bytes
-                    }
+                    if (try? FileManager.default.trashItem(at: url, resultingItemURL: nil)) != nil { removed.insert(file.id) }
                 }
             }
         }
-        removeEverywhere(removed)
-        return removed.count
+        return removed
     }
 
     /// Merges each selected contact group into its fullest contact, after saving a vCard backup of all of them.
     /// Every field the app can read is carried over with its label; nothing is merged across accounts.
-    func mergeContacts() -> Int {
+    func mergeContacts() async -> Int {
         guard let groups = results[.contacts]?.contactGroups.filter({ selection.contains($0.keep.id) && $0.sameContainer }), !groups.isEmpty else { return 0 }
+        let mergedIDs = await Task.detached { Self.merge(groups) }.value
+        results[.contacts]?.contactGroups.removeAll { mergedIDs.contains($0.keep.id) }
+        selection.subtract(mergedIDs)
+        return mergedIDs.count
+    }
+
+    nonisolated private static func merge(_ groups: [ContactGroup]) -> Set<String> {
         let store = CNContactStore()
         let ids = groups.flatMap { [$0.keep.id] + $0.others.map(\.id) }
         let contacts = ContactScanner.raw(ids, store: store)
-        guard !contacts.isEmpty, backup(contacts) else { return 0 }
+        guard !contacts.isEmpty, backup(contacts) else { return [] }
         let byID = Dictionary(contacts.map { ($0.identifier, $0) }, uniquingKeysWith: { a, _ in a })
         var mergedIDs = Set<String>()
         for group in groups {
             guard let keeper = byID[group.keep.id]?.mutableCopy() as? CNMutableContact else { continue }
             let others = group.others.compactMap { byID[$0.id] }
-            for other in others { absorb(other, into: keeper) }
+            for other in others { Self.absorb(other, into: keeper) }
             let request = CNSaveRequest()
             request.update(keeper)
             for other in others {
@@ -181,13 +202,11 @@ final class PhoneStore {
             }
             if (try? store.execute(request)) != nil { mergedIDs.insert(group.keep.id) }
         }
-        results[.contacts]?.contactGroups.removeAll { mergedIDs.contains($0.keep.id) }
-        selection.subtract(mergedIDs)
-        return mergedIDs.count
+        return mergedIDs
     }
 
     /// Copies what `other` has and `keeper` lacks, keeping each value's label.
-    private func absorb(_ other: CNContact, into keeper: CNMutableContact) {
+    nonisolated private static func absorb(_ other: CNContact, into keeper: CNMutableContact) {
         let phones = Set(keeper.phoneNumbers.map { normalizedPhone($0.value.stringValue) })
         keeper.phoneNumbers += other.phoneNumbers.filter { !phones.contains(normalizedPhone($0.value.stringValue)) }
         let emails = Set(keeper.emailAddresses.map { ($0.value as String).lowercased() })
@@ -205,7 +224,7 @@ final class PhoneStore {
     }
 
     /// Writes every contact about to change to Files, in Neuralyzer's folder, before merging.
-    private func backup(_ contacts: [CNContact]) -> Bool {
+    nonisolated private static func backup(_ contacts: [CNContact]) -> Bool {
         guard let data = try? CNContactVCardSerialization.data(with: contacts) else { return false }
         let folder = URL.documentsDirectory.appending(path: "Contact Backups", directoryHint: .isDirectory)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

@@ -51,6 +51,11 @@ struct PhotoGridView: View {
             }
             .contentShape(shape)
             .onTapGesture { if !keep { store.toggle(photo.id) } }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(keep ? "Kept copy" : (photo.isVideo ? "Video" : "Photo"))
+            .accessibilityValue(keep ? "" : (selected ? "Selected" : "Not selected"))
+            .accessibilityAddTraits(keep ? [] : [.isButton])
+            .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 }
 

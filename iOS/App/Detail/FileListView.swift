@@ -39,5 +39,8 @@ struct FileListView: View {
         .overlay(shape.strokeBorder(Theme.ink, lineWidth: 1.5))
         .contentShape(shape)
         .onTapGesture { if !keep { store.toggle(file.id) } }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(keep ? [] : [.isButton])
+        .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 }
