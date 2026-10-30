@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1
+
+- A cleaner icon: three fanned cards with a check on the front one.
+- Claude Code shows a terminal icon instead of a sparkle.
+
 ## 1.1.0
 
 - New System card: system caches and logs, simulator system caches, temp files untouched for three days, Time Machine local snapshots, old macOS installers, and iPhone backups. System items are removed with one password prompt per clean.

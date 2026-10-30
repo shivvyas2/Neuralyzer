@@ -106,7 +106,18 @@ struct AppMark: View {
         ZStack(alignment: .bottom) {
             card(Theme.lavender).rotationEffect(.degrees(-16), anchor: .bottom).offset(x: -size * 0.16)
             card(Theme.blue).rotationEffect(.degrees(16), anchor: .bottom).offset(x: size * 0.16)
-            card(Theme.yellow).offset(y: -size * 0.03)
+            card(Theme.yellow)
+                .overlay {
+                    // A white tile with a check on the front card: cleaned.
+                    let tile = RoundedRectangle(cornerRadius: size * 0.05, style: .continuous)
+                    Image(systemName: "checkmark")
+                        .font(.system(size: size * 0.1, weight: .heavy))
+                        .foregroundStyle(Theme.ink)
+                        .frame(width: size * 0.17, height: size * 0.17)
+                        .background(tile.fill(.white))
+                        .overlay(tile.strokeBorder(Theme.ink, lineWidth: max(1.2, size * 0.015)))
+                }
+                .offset(y: -size * 0.03)
         }
         .frame(width: size, height: size * 0.82)
     }

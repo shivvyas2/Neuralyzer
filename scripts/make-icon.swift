@@ -16,7 +16,7 @@ tile.lineWidth = 4
 tile.stroke()
 
 // One card, rotated about the bottom center of the tile.
-func card(_ color: NSColor, angle: CGFloat, dx: CGFloat, dy: CGFloat) {
+func card(_ color: NSColor, angle: CGFloat, dx: CGFloat, dy: CGFloat, check: Bool = false) {
     ctx.saveGState()
     ctx.translateBy(x: 512 + dx, y: 300 + dy)
     ctx.rotate(by: angle * .pi / 180)
@@ -29,18 +29,28 @@ func card(_ color: NSColor, angle: CGFloat, dx: CGFloat, dy: CGFloat) {
     ink.setStroke()
     body.lineWidth = 18
     body.stroke()
-    // A white label strip near the bottom of the card.
-    let strip = NSBezierPath(roundedRect: NSRect(x: -100, y: 56, width: 150, height: 34), xRadius: 17, yRadius: 17)
-    NSColor.white.setFill()
-    strip.fill()
-    strip.lineWidth = 10
-    strip.stroke()
+    if check {
+        // A white tile with a check on the front card: cleaned.
+        let tile = NSBezierPath(roundedRect: NSRect(x: -78, y: 120, width: 156, height: 156), xRadius: 40, yRadius: 40)
+        NSColor.white.setFill()
+        tile.fill()
+        tile.lineWidth = 14
+        tile.stroke()
+        let mark = NSBezierPath()
+        mark.move(to: NSPoint(x: -38, y: 198))
+        mark.line(to: NSPoint(x: -10, y: 168))
+        mark.line(to: NSPoint(x: 42, y: 226))
+        mark.lineWidth = 20
+        mark.lineCapStyle = .round
+        mark.lineJoinStyle = .round
+        mark.stroke()
+    }
     ctx.restoreGState()
 }
 
 card(NSColor(red: 0.776, green: 0.714, blue: 1.0, alpha: 1), angle: 16, dx: -120, dy: 20)
 card(NSColor(red: 0.431, green: 0.616, blue: 0.969, alpha: 1), angle: -16, dx: 120, dy: 20)
-card(NSColor(red: 1.0, green: 0.784, blue: 0.239, alpha: 1), angle: 0, dx: 0, dy: 40)
+card(NSColor(red: 1.0, green: 0.784, blue: 0.239, alpha: 1), angle: 0, dx: 0, dy: 40, check: true)
 
 image.unlockFocus()
 let rep = NSBitmapImageRep(data: image.tiffRepresentation!)!
