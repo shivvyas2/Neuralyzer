@@ -1,6 +1,8 @@
 # Neuralyzer
 
-A plain Mac app that finds what is filling your disk and cleans it. Built for a developer Mac: Xcode, simulators, Claude Code, package caches, build folders, VMs, and the big forgotten files in Downloads.
+A plain Mac app that finds what is filling your disk and cleans it. Website: [neuralyzer.shivvyas.com](https://neuralyzer.shivvyas.com). Built for a developer Mac: Xcode, simulators, Claude Code, package caches, build folders, VMs, and the big forgotten files in Downloads.
+
+<p align="center"><img src="App/Assets.xcassets/AppIcon.appiconset/icon_256x256.png" width="128" alt=""></p>
 
 ![Neuralyzer](docs/images/home.png)
 
