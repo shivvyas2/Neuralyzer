@@ -33,7 +33,7 @@ struct RecommendedCard: View {
     }
 }
 
-enum Route: Hashable { case recommended }
+enum Route: Hashable { case recommended, cleanOtherApps }
 
 /// Every recommendation with its photos or files; one button deletes what is checked.
 struct RecommendedView: View {

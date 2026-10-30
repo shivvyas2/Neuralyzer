@@ -34,7 +34,12 @@ struct HomeView: View {
                 .padding(20)
             }
             .navigationDestination(for: PhoneCategory.self) { CategoryDetailView(category: $0) }
-            .navigationDestination(for: Route.self) { _ in RecommendedView() }
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .recommended: RecommendedView()
+                case .cleanOtherApps: CleanOtherAppsView()
+                }
+            }
             .toolbar(.hidden, for: .navigationBar)
         }
         .onAppear { if store.results.isEmpty && !store.scanning { store.scan() } }

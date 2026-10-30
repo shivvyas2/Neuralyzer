@@ -68,7 +68,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.shivvyas.neuralyzer.ios
         PRODUCT_NAME: Neuralyzer
         MARKETING_VERSION: 1.0.0
-        CURRENT_PROJECT_VERSION: 4
+        CURRENT_PROJECT_VERSION: 5
         DEVELOPMENT_TEAM: Z42YU5W6WY
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1"
